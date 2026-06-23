@@ -1,0 +1,94 @@
+Patchwork Contributors
+======================
+
+The Go port of Patchwork is derived from the original Python/Django
+implementation. The following people have contributed to the original
+codebase (extracted from git history):
+
+Aaron Conole <aconole@bytheb.org>
+Abdun Nihaal <abdun.nihaal@gmail.com>
+Abhishek Kulkarni <adkulkar@umail.iu.edu>
+Adam Hassick <ahassick@iol.unh.edu>
+Adam Jackson <ajax@redhat.com>
+Aldot <rep.dot.nop@gmail.com>
+Ali Alnubani <alialnu@nvidia.com> <alialnu@mellanox.com>
+Andreas Bießmann Andreas Bießmann <andreas@biessmann.de> <andreas.devel@googlemail.com>
+Andrew Donnellan <ajd@linux.ibm.com> <andrew.donnellan@au1.ibm.com>
+Andriy Gelman <andriy.gelman@gmail.com>
+Andy Doan <andy.doan@linaro.org>
+Avinesh Kumar <avinesh.kumar@suse.com>
+Belén Barros Peña <belen.barros.pena@intel.com>
+Ben Myers <bpm@sgi.com>
+Bernhard Reutner-Fischer <rep.dot.nop@gmail.com>
+Brian Norris <computersforpeace@gmail.com>
+Bruno Mendes <brunosouza@alunos.utfpr.edu.br>
+Bryce Harrington <bryce@osg.samsung.com>
+Carl Worth <cworth@cworth.org>
+Carl-Daniel Hailfinger <c-d.hailfinger.devel.2006@gmx.net>
+DJ Delorie <dj@delorie.com>
+Damien Lespiau <damien.lespiau@intel.com>
+Daniel Axtens <dja@axtens.net>
+Daniel Black <daniel@linux.ibm.com>
+David Lamparter <equinox@diac24.net>
+David decotigny <david.decotigny@google.com>
+Denis Laxalde <denis@laxalde.org>
+Dirk Wallenstein <halsmit@t-online.de>
+Doug Anderson <dianders@chromium.org>
+Eduardo Habkost <ehabkost@redhat.com>
+Eric Engestrom <eric@engestrom.ch>
+Florian Fainelli <f.fainelli@gmail.com>
+Guilherme Salgado <guilherme.salgado@linaro.org>
+Ilya Shipitsin <chipitsine@gmail.com>
+Jan Remmet <j.remmet@phytec.de>
+Jani Nikula <jani.nikula@intel.com>
+Jeremy Cline <jcline@redhat.com>
+Jeremy Kerr <jk@ozlabs.org>
+Jiri Benc <jbenc@redhat.com>
+Johan Herland <johan@herland.net>
+Johannes Berg <johannes@sipsolutions.net>
+John 'Warthog9' Hawley <warthog9@kernel.org>
+Junio C Hamano <gitster@pobox.com>
+Konstantin Ryabitsev <konstantin@linuxfoundation.org> <mricon@kernel.org>
+Laurent Pinchart <laurent.pinchart@ideasonboard.com>
+Martin Krafft <madduck@madduck.net>
+Matthias Brugger <mbrugger@suse.com>
+Mauro Carvalho Chehab <mchehab@kernel.org> <mchehab@osg.samsung.com>
+Mete Polat <metepolat2000@gmail.com>
+Michael Ellerman <mpe@ellerman.id.au>
+Michael Wood <michael.g.wood@intel.com>
+Miguel Saura <miguelsaura063@gmail.com>
+Mike Frysinger <vapier@chromium.org>
+Nate Case <ncase@xes-inc.com>
+Nisha Poyarekar <nisha.s.menon@gmail.com>
+Paul Menzel <paulepanter@users.sourceforge.net>
+Petr Vorel <petr.vorel@gmail.com>
+Philippe Pepiot <philippe.pepiot@logilab.fr>
+Pranav Annam <pranavannam@gmail.com>
+Ralf Baechle <ralf@linux-mips.org>
+Raxel Gutierrez <raxelgutierrez09@gmail.com>
+Raxelg <raxelgutierrez09@gmail.com>
+Robin Jarry <robin@jarry.cc> <robin.jarry@6wind.com>
+Rohit Sarkar <rohitsarkar5398@gmail.com>
+Ross Burton <ross.burton@arm.com>
+Russell Currey <ruscur@russell.cc>
+Sean Farley <sean@farley.io>
+Siddhesh Poyarekar <siddhesh@redhat.com>
+Simo Sorce <idra@samba.org>
+Stefan Hajnoczi <stefanha@linux.vnet.ibm.com>
+Stephen Finucane <stephen@that.guru> <stephenfinucane@hotmail.com>
+Stewart Smith <stewart@flamingspork.com> <stewart@linux.ibm.com>
+Sven Eckelmann <sven@narfation.org>
+Tales da Aparecida <tales.aparecida@redhat.com>
+Thomas Bracht Laumann Jespersen <t@laumann.xyz>
+Thomas Monjalon <thomas@monjalon.net> <thomas.monjalon@6wind.com>
+Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+Toke Høiland-Jørgensen <toke@toke.dk>
+Tom Rini <trini@konsulko.com>
+Veronika Kabatova <vkabatov@redhat.com>
+Victor Accarini <victor.accarini@gmail.com>
+Wen Pingbo <wengpingbo@gmail.com>
+Wolfram Sang <wsa@the-dreams.de>
+Yann E. Morin <yann.morin.1998@free.fr>
+You-Sheng Yang (vicamo) <vicamo@gmail.com>
+You-Sheng Yang <vicamo@gmail.com>
+Yuri Volchkov <yuri.volchkov@gmail.com>
