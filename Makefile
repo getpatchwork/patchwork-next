@@ -13,7 +13,7 @@ else
 Q = @
 endif
 
-license_exclude = ':!:*.md' ':!:*.asc' ':!:CONTRIBUTORS' ':!:LICENSE' ':!:.*'
+license_exclude = ':!:*.md' ':!:*.asc' ':!:CONTRIBUTORS' ':!:LICENSE' ':!:.*' ':!:go.mod' ':!:go.sum'
 
 .PHONY: lint
 lint:
