@@ -13,10 +13,26 @@ else
 Q = @
 endif
 
+import_reviser ?= github.com/incu6us/goimports-reviser/v3@v3.12.6
+import_reviser_flags ?= -rm-unused -project-name github.com/getpatchwork/patchwork
+gofumpt ?= mvdan.cc/gofumpt@v0.9.2
+golangci_lint ?= github.com/golangci/golangci-lint/v2/cmd/golangci-lint@v2.12.2
 license_exclude = ':!:*.md' ':!:*.asc' ':!:CONTRIBUTORS' ':!:LICENSE' ':!:.*' ':!:go.mod' ':!:go.sum'
 
 .PHONY: lint
 lint:
+	@echo '[goimports-reviser]'
+	$Q ! $(GO) run $(import_reviser) $(import_reviser_flags) -list-diff -output stdout ./... | grep . || { \
+		echo 'error: above files need import sorting'; \
+		exit 1; \
+	}
+	@echo '[gofumpt]'
+	$Q ! $(GO) run $(gofumpt) -d . | grep ^diff || { \
+		echo 'error: above files need reformatting'; \
+		exit 1; \
+	}
+	@echo '[golangci-lint]'
+	@$(GO) run $(golangci_lint) run
 	@echo '[license-check]'
 	$Q ! git --no-pager grep -LF 'SPDX-License-Identifier: GPL-2.0-or-later' -- $(license_exclude) || { \
 		echo 'error: above files are missing license'; \
@@ -30,6 +46,11 @@ lint:
 	$Q git ls-files | xargs devtools/check-whitespace
 	@echo '[codespell]'
 	$Q codespell *
+
+.PHONY: format
+format:
+	$(GO) run $(import_reviser) $(import_reviser_flags) ./...
+	$(GO) run $(gofumpt) -w .
 
 REVISION_RANGE ?= @{u}..
 

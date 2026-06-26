@@ -1,0 +1,64 @@
+version = "2"
+
+[run]
+# don't lint tests
+tests = false
+
+# enable additional linters
+[linters]
+enable = [
+	"nolintlint", # nolint comments require justification
+	"errorlint", # check to ensure no problems with wrapped errors
+	"gocritic", # check for bugs, performance, and style issues
+	"govet", # enable explicitly to tune printf checks
+]
+
+[linters.settings.errcheck]
+exclude-functions = [
+	"(*github.com/getpatchwork/patchwork/pkg/db.Queries).Rollback",
+	"(*github.com/uptrace/bun.RawQuery).Scan",
+	"(*github.com/uptrace/bun.SelectQuery).Scan",
+	"(*log.Logger).Output",
+	"(*net/http.Request).ParseForm",
+	"(github.com/a-h/templ.Component).Render",
+	"(github.com/uptrace/bun.Tx).Rollback",
+	"io.Copy",
+]
+
+[linters.settings.nolintlint]
+allow-unused = false # don't allow nolint if not required
+require-explanation = true # require an explanation when disabling a linter
+requre-specific = true # linter exceptions must specify the linter
+
+[linters.settings.govet.settings.printf]
+funcs = [
+	"github.com/getpatchwork/patchwork/pkg/log.Debugf",
+	"github.com/getpatchwork/patchwork/pkg/log.Infof",
+	"github.com/getpatchwork/patchwork/pkg/log.Noticef",
+	"github.com/getpatchwork/patchwork/pkg/log.Warnf",
+	"github.com/getpatchwork/patchwork/pkg/log.Errorf",
+	"github.com/getpatchwork/patchwork/pkg/log.Fatalf",
+]
+
+[linters.exclusions]
+generated = "lax"
+presets = [
+	"comments",
+	"common-false-positives",
+	"legacy",
+	"std-error-handling"
+]
+
+
+[formatters]
+enable = [
+	"gofmt"
+]
+
+[formatters.exclusions]
+generated = "lax"
+paths = [
+	"third_party$",
+	"builtin$",
+	"examples$"
+]
