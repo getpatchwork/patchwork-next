@@ -5,6 +5,9 @@ go 1.26.4
 require (
 	github.com/alecthomas/kong v1.15.0
 	github.com/alecthomas/kong-toml v0.4.0
+	github.com/emersion/go-message v0.18.2
+	github.com/emersion/go-sasl v0.0.0-20241020182733-b788ff22d5a6
+	github.com/emersion/go-smtp v0.24.0
 	github.com/go-sql-driver/mysql v1.10.0
 	github.com/jackc/pgx/v5 v5.10.0
 	github.com/uptrace/bun v1.2.18
