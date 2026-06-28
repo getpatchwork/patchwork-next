@@ -19,6 +19,10 @@ gofumpt ?= mvdan.cc/gofumpt@v0.9.2
 golangci_lint ?= github.com/golangci/golangci-lint/v2/cmd/golangci-lint@v2.12.2
 license_exclude = ':!:*.md' ':!:*.asc' ':!:CONTRIBUTORS' ':!:LICENSE' ':!:.*' ':!:go.mod' ':!:go.sum'
 
+.PHONY: test
+test:
+	$(GO) test ./...
+
 .PHONY: lint
 lint:
 	@echo '[goimports-reviser]'
