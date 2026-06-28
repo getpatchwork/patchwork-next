@@ -17,7 +17,7 @@ import_reviser ?= github.com/incu6us/goimports-reviser/v3@v3.12.6
 import_reviser_flags ?= -rm-unused -project-name github.com/getpatchwork/patchwork
 gofumpt ?= mvdan.cc/gofumpt@v0.9.2
 golangci_lint ?= github.com/golangci/golangci-lint/v2/cmd/golangci-lint@v2.12.2
-license_exclude = ':!:*.md' ':!:*.asc' ':!:CONTRIBUTORS' ':!:LICENSE' ':!:.*' ':!:go.mod' ':!:go.sum'
+license_exclude = ':!:*.md' ':!:*.asc' ':!:CONTRIBUTORS' ':!:LICENSE' ':!:.*' ':!:go.mod' ':!:go.sum' ':!:pkg/mail/testdata'
 
 .PHONY: test
 test:
@@ -47,7 +47,7 @@ lint:
 		exit 1; \
 	}
 	@echo '[white-space]'
-	$Q git ls-files | xargs devtools/check-whitespace
+	$Q git ls-files ':!:pkg/mail/testdata' | xargs devtools/check-whitespace
 	@echo '[codespell]'
 	$Q codespell *
 
