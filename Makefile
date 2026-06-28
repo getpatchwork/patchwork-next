@@ -13,6 +13,14 @@ else
 Q = @
 endif
 
+.PHONY: all
+all: pw
+
+src = $(shell git ls-files '*.go')
+
+pw: $(src)
+	$(GO) build -trimpath -o pw ./cmd/pw
+
 import_reviser ?= github.com/incu6us/goimports-reviser/v3@v3.12.6
 import_reviser_flags ?= -rm-unused -project-name github.com/getpatchwork/patchwork
 gofumpt ?= mvdan.cc/gofumpt@v0.9.2
