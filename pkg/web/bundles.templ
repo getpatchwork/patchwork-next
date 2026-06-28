@@ -1,0 +1,195 @@
+// Patchwork - automated patch tracking system
+// Copyright (C) The Patchwork Contributors (see CONTRIBUTORS)
+//
+// SPDX-License-Identifier: GPL-2.0-or-later
+
+package web
+
+import "fmt"
+
+templ bundleListPage(d bundleListData) {
+	@layout("Bundles", []breadcrumb{{Label: "Bundles"}}, d.PC) {
+		<h1>Bundles</h1>
+		if len(d.Bundles) > 0 {
+			<patch-list>
+				<table>
+					<thead>
+						<tr>
+							<th>Bundle</th>
+							<th>Project</th>
+							<th>Public</th>
+							<th>Patches</th>
+							<th>Download</th>
+							<th>Delete</th>
+						</tr>
+					</thead>
+					<tbody>
+						for _, b := range d.Bundles {
+							<tr>
+								<td>
+									if b.Owner != nil {
+										<a href={ templ.SafeURL(fmt.Sprintf("/bundle/%s/%s/", b.Owner.Username, b.Name)) }>
+											{ b.Name }
+										</a>
+									} else {
+										{ b.Name }
+									}
+								</td>
+								<td>
+									if b.Project != nil {
+										<a href={ templ.SafeURL("/project/" + b.Project.Linkname + "/list/") }>
+											{ b.Project.Linkname }
+										</a>
+									}
+								</td>
+								<td>
+									if b.Public {
+										Yes
+									} else {
+										No
+									}
+								</td>
+								<td>{ intStr(b.PatchCount) }</td>
+								<td>
+									if b.Owner != nil {
+										<a href={ templ.SafeURL(fmt.Sprintf("/bundle/%s/%s/mbox/", b.Owner.Username, b.Name)) }>mbox</a>
+									}
+								</td>
+								<td>
+									<form method="post" action={ templ.SafeURL(fmt.Sprintf("/bundle/%s/%s/", b.Owner.Username, b.Name)) }>
+										<input type="hidden" name="csrftoken" value={ d.PC.CSRFToken }/>
+										<input type="hidden" name="action" value="delete"/>
+										<button type="submit"><danger-action>Delete</danger-action></button>
+									</form>
+								</td>
+							</tr>
+						}
+					</tbody>
+				</table>
+			</patch-list>
+		}
+		<p>
+			Bundles are groups of related patches. You can create bundles by
+			selecting patches from a project, then using the "create bundle" form
+			to give your bundle a name. Each bundle can be public or private; public
+			bundles are given a persistent URL, based on your username and the name
+			of the bundle. Private bundles are only visible to you.
+		</p>
+		if len(d.Bundles) == 0 {
+			<p>You have no bundles.</p>
+		}
+	}
+}
+
+templ bundleDetailPage(d bundleDetailData) {
+	@layout(d.Bundle.Name, []breadcrumb{
+		{Label: "Bundles", URL: "/user/bundles/"},
+		{Label: d.Bundle.Name},
+	}, d.PC) {
+		<title-bar>
+			<h1>{ d.Bundle.Name }</h1>
+			<download-links>
+				if d.Bundle.Owner != nil {
+					<a href={ templ.SafeURL(fmt.Sprintf("/bundle/%s/%s/mbox/", d.Bundle.Owner.Username, d.Bundle.Name)) }>mbox</a>
+				}
+			</download-links>
+		</title-bar>
+		if d.IsOwner {
+			<patch-filters>
+				<form method="post">
+					<input type="hidden" name="csrftoken" value={ d.PC.CSRFToken }/>
+					<label>Name</label>
+					<input type="text" name="name" value={ d.Bundle.Name }/>
+					<label>
+						if d.Bundle.Public {
+							<input type="checkbox" name="public" checked/>
+						} else {
+							<input type="checkbox" name="public"/>
+						}
+						Public
+					</label>
+					<button type="submit" name="action" value="update">Update</button>
+					<button type="submit" name="action" value="delete"><danger-action>Delete</danger-action></button>
+				</form>
+			</patch-filters>
+		}
+		if len(d.Patches) == 0 {
+			<p>No patches in this bundle.</p>
+		} else {
+			if d.IsOwner {
+				<form method="post">
+					<input type="hidden" name="csrftoken" value={ d.PC.CSRFToken }/>
+					<input type="hidden" name="action" value="remove-patches"/>
+					<patch-list>
+						<table>
+							<thead>
+								<tr>
+									if d.IsOwner {
+										<th></th>
+									}
+									<th>Patch</th>
+									<th>Date</th>
+									<th>Submitter</th>
+									<th>State</th>
+								</tr>
+							</thead>
+							<tbody>
+								for _, p := range d.Patches {
+									<tr>
+										if d.IsOwner {
+											<td><input type="checkbox" name="patch_id" value={ fmt.Sprintf("%d", p.ID) }/></td>
+										}
+										<td><a href={ templ.SafeURL(patchURL(d.Bundle.Project.Linkname, p.Msgid)) }>{ p.Name }</a></td>
+										<td>{ p.Date.Format("2006-01-02") }</td>
+										<td>
+											if p.Submitter != nil {
+												<a href={ templ.SafeURL(fmt.Sprintf("/project/%s/list/?submitter=%d", d.Bundle.Project.Linkname, p.SubmitterID)) }>{ personName(p.Submitter) }</a>
+											}
+										</td>
+										<td>
+											if p.State != nil {
+												{ p.State.Name }
+											}
+										</td>
+									</tr>
+								}
+							</tbody>
+						</table>
+					</patch-list>
+					<button type="submit">Remove selected</button>
+				</form>
+			} else {
+				<patch-list>
+					<table>
+						<thead>
+							<tr>
+								<th>Patch</th>
+								<th>Date</th>
+								<th>Submitter</th>
+								<th>State</th>
+							</tr>
+						</thead>
+						<tbody>
+							for _, p := range d.Patches {
+								<tr>
+									<td><a href={ templ.SafeURL(patchURL(d.Bundle.Project.Linkname, p.Msgid)) }>{ p.Name }</a></td>
+									<td>{ p.Date.Format("2006-01-02") }</td>
+									<td>
+										if p.Submitter != nil {
+											<a href={ templ.SafeURL(fmt.Sprintf("/project/%s/list/?submitter=%d", d.Bundle.Project.Linkname, p.SubmitterID)) }>{ personName(p.Submitter) }</a>
+										}
+									</td>
+									<td>
+										if p.State != nil {
+											{ p.State.Name }
+										}
+									</td>
+								</tr>
+							}
+						</tbody>
+					</table>
+				</patch-list>
+			}
+		}
+	}
+}

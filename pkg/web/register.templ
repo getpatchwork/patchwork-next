@@ -1,0 +1,47 @@
+// Patchwork - automated patch tracking system
+// Copyright (C) The Patchwork Contributors (see CONTRIBUTORS)
+//
+// SPDX-License-Identifier: GPL-2.0-or-later
+
+package web
+
+templ registerPage(pc pageContext, errors []string) {
+	@layout("Register", nil, pc) {
+		<auth-form>
+			<h1>Register</h1>
+			for _, e := range errors {
+				<error-msg>{ e }</error-msg>
+			}
+			<form method="post" action="/register/">
+				<input type="hidden" name="csrftoken" value={ pc.CSRFToken }/>
+				<input type="text" name="username" placeholder="Username" required/>
+				<input type="email" name="email" placeholder="Email" required/>
+				<input type="text" name="first_name" placeholder="First name"/>
+				<input type="text" name="last_name" placeholder="Last name"/>
+				<input type="password" name="password" placeholder="Password" required/>
+				<button type="submit">Register</button>
+			</form>
+		</auth-form>
+	}
+}
+
+templ registerConfirmSentPage(pc pageContext, email string) {
+	@layout("Registration", nil, pc) {
+		<auth-form>
+			<h1>Confirm Registration</h1>
+			<p>
+				A confirmation email has been sent to <strong>{ email }</strong>.
+				Please check your inbox and click the link to complete your registration.
+			</p>
+		</auth-form>
+	}
+}
+
+templ confirmResultPage(pc pageContext, message string) {
+	@layout("Confirmation", nil, pc) {
+		<auth-form>
+			<h1>Confirmation</h1>
+			<p>{ message }</p>
+		</auth-form>
+	}
+}

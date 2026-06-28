@@ -1,0 +1,127 @@
+// Patchwork - automated patch tracking system
+// Copyright (C) The Patchwork Contributors (see CONTRIBUTORS)
+//
+// SPDX-License-Identifier: GPL-2.0-or-later
+
+package web
+
+import (
+	"fmt"
+	"strings"
+	"time"
+
+	"github.com/getpatchwork/patchwork/pkg/db"
+)
+
+type coverDetailData struct {
+	PC       pageContext
+	Project  db.Project
+	Cover    db.Cover
+	Comments []db.CoverComment
+	Series   *db.Series
+	Patches  []seriesPatchRef
+	Metadata map[string]string
+}
+
+templ coverDetailPage(d coverDetailData) {
+	@layout(d.Cover.Name, []breadcrumb{
+		{Label: d.Project.Name, URL: "/project/" + d.Project.Linkname + "/"},
+		{Label: "Patches", URL: "/project/" + d.Project.Linkname + "/list/"},
+		{Label: truncate(d.Cover.Name, 72)},
+	}, d.PC) {
+		<submission-meta>
+			@downloadLinks(d.Cover.ID, d.Project.Linkname, d.Cover.Msgid, d.Series)
+			<table>
+				<tbody>
+					<tr>
+						<th>Message ID</th>
+						<td><code>{ strings.Trim(d.Cover.Msgid, "<>") }</code></td>
+					</tr>
+					<tr>
+						<th>Date</th>
+						<td>{ d.Cover.Date.Format(time.RFC1123Z) }</td>
+					</tr>
+					<tr>
+						<th>Headers</th>
+						<td>
+							<details>
+								<summary>show</summary>
+								<pre>{ d.Cover.Headers }</pre>
+							</details>
+						</td>
+					</tr>
+					if d.Series != nil {
+						<tr>
+							<th>Series</th>
+							<td>
+								<details>
+									<summary>
+										<a href={ templ.SafeURL(fmt.Sprintf("/project/%s/list/?series=%d", d.Project.Linkname, d.Series.ID)) }>
+											if d.Series.Name != nil {
+												{ *d.Series.Name }
+											} else {
+												{ fmt.Sprintf("Series #%d", d.Series.ID) }
+											}
+										</a>
+									</summary>
+									<ul>
+										<li>
+											{ d.Cover.Name }
+										</li>
+										for _, sp := range d.Patches {
+											<li>
+												<a href={ templ.SafeURL(sp.URL) }>{ sp.Name }</a>
+											</li>
+										}
+									</ul>
+								</details>
+							</td>
+						</tr>
+						for k, v := range d.Metadata {
+							<tr>
+								<th>{ k }</th>
+								<td>
+									if isURL(v) {
+										<a href={ templ.SafeURL(v) }>{ v }</a>
+									} else {
+										<code>{ v }</code>
+									}
+								</td>
+							</tr>
+						}
+					}
+				</tbody>
+			</table>
+		</submission-meta>
+		<h2>Message</h2>
+		if d.Cover.Submitter != nil {
+			<comment-header>
+				if d.Cover.Submitter != nil {
+					@personDisplay(d.Cover.Submitter, &d.Project)
+				}
+				<span>{ d.Cover.Date.Format("Jan. 2, 2006, 15:04. UTC") }</span>
+			</comment-header>
+		}
+		<pre>
+			@templ.Raw(highlightMessage(coverMessage(d.Cover)))
+		</pre>
+		if len(d.Comments) > 0 {
+			<h2>Comments</h2>
+			for _, c := range d.Comments {
+				<article id={ fmt.Sprintf("comment-%d", c.ID) }>
+					<comment-header>
+						if c.Submitter != nil {
+							@personDisplay(c.Submitter, &d.Project)
+						}
+						<span>{ c.Date.Format("Jan. 2, 2006, 15:04. UTC") }</span>
+					</comment-header>
+					if c.Content != nil {
+						<pre>
+							@templ.Raw(highlightMessage(*c.Content))
+						</pre>
+					}
+				</article>
+			}
+		}
+	}
+}

@@ -1,0 +1,94 @@
+// Patchwork - automated patch tracking system
+// Copyright (C) The Patchwork Contributors (see CONTRIBUTORS)
+//
+// SPDX-License-Identifier: GPL-2.0-or-later
+
+package web
+
+import (
+	"fmt"
+
+	"github.com/getpatchwork/patchwork/pkg/db"
+)
+
+templ todoListsPage(pc pageContext, todos []todoProject) {
+	@layout("Todo", []breadcrumb{{Label: "Todo"}}, pc) {
+		<h1>Todo Lists</h1>
+		if len(todos) == 0 {
+			<p>You have no patches in your todo list at present.</p>
+		} else {
+			<patch-list>
+				<table>
+					<thead>
+						<tr>
+							<th>Project</th>
+							<th>Patches</th>
+						</tr>
+					</thead>
+					<tbody>
+						for _, t := range todos {
+							<tr>
+								<td>
+									<a href={ templ.SafeURL("/user/todo/" + t.Project.Linkname + "/") }>
+										{ t.Project.Name }
+									</a>
+								</td>
+								<td>{ intStr(t.NPatches) }</td>
+							</tr>
+						}
+					</tbody>
+				</table>
+			</patch-list>
+		}
+	}
+}
+
+templ todoListPage(pc pageContext, project db.Project, patches []db.Patch) {
+	@layout("Todo", []breadcrumb{
+		{Label: "Todo", URL: "/user/todo/"},
+		{Label: project.Name},
+	}, pc) {
+		<h1>Todo: { project.Name }</h1>
+		if len(patches) == 0 {
+			<p>No patches to review.</p>
+		} else {
+			<p>{ fmt.Sprintf("%d", len(patches)) } patches delegated to you.</p>
+			<patch-list>
+				<table>
+					<thead>
+						<tr>
+							<th>Patch</th>
+							<th>Date</th>
+							<th>Submitter</th>
+							<th>State</th>
+						</tr>
+					</thead>
+					<tbody>
+						for _, p := range patches {
+							<tr>
+								<td>
+									<a href={ templ.SafeURL(patchURL(project.Linkname, p.Msgid)) }>
+										{ p.Name }
+									</a>
+								</td>
+								<td>{ p.Date.Format("2006-01-02") }</td>
+								<td>
+									if p.Submitter != nil {
+										<a href={ templ.SafeURL(fmt.Sprintf("/project/%s/list/?submitter=%d", project.Linkname, p.SubmitterID)) }>
+											{ personName(p.Submitter) }
+										</a>
+									}
+								</td>
+								<td>
+									if p.State != nil {
+										{ p.State.Name }
+									}
+								</td>
+							</tr>
+						}
+					</tbody>
+				</table>
+			</patch-list>
+		}
+	}
+}

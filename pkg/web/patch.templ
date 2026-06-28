@@ -1,0 +1,325 @@
+// Patchwork - automated patch tracking system
+// Copyright (C) The Patchwork Contributors (see CONTRIBUTORS)
+//
+// SPDX-License-Identifier: GPL-2.0-or-later
+
+package web
+
+import (
+	"fmt"
+	"strings"
+
+	"github.com/getpatchwork/patchwork/pkg/db"
+)
+
+type seriesPatchRef struct {
+	Name    string
+	URL     string
+	Current bool
+}
+
+type patchDetailData struct {
+	PC              pageContext
+	Project         db.Project
+	Patch           db.Patch
+	Comments        []db.PatchComment
+	Checks          []db.Check
+	Series          *db.Series
+	SeriesPatches   []seriesPatchRef
+	Cover           *db.Cover
+	SeriesMetadata  map[string]string
+	States          []db.State
+	Delegates       []db.User
+	CanEdit         bool
+	Related         []db.PatchRef
+	ListArchiveURL  string
+	PreviousSeries  *db.Series
+	NextSeries      []db.Series
+}
+
+templ downloadLinks(submissionid int, linkname, msgid string, series *db.Series) {
+	<download-links>
+		<button>{ submissionid }</button>
+		<a href={ templ.SafeURL(patchURL(linkname, msgid) + "mbox/") }>mbox</a>
+		if series != nil {
+			<a href={ templ.SafeURL(fmt.Sprintf("/series/%d/mbox/", series.ID)) }>series</a>
+		}
+	</download-links>
+}
+
+templ patchDetailPage(d patchDetailData) {
+	@layout(d.Patch.Name, []breadcrumb{
+		{Label: d.Project.Name, URL: "/project/" + d.Project.Linkname + "/"},
+		{Label: "Patches", URL: "/project/" + d.Project.Linkname + "/list/"},
+		{Label: truncate(d.Patch.Name, 72)},
+	}, d.PC) {
+		<form method="post" action={ templ.SafeURL(patchURL(d.Project.Linkname, d.Patch.Msgid)) }>
+			<input type="hidden" name="csrftoken" value={ d.PC.CSRFToken }/>
+			<submission-meta>
+				@downloadLinks(d.Patch.ID, d.Project.Linkname, d.Patch.Msgid, d.Series)
+				<table>
+					<tbody>
+						<tr>
+							<th>Message ID</th>
+							<td>
+								if d.ListArchiveURL != "" {
+									<a href={ templ.SafeURL(d.ListArchiveURL) }><code>{ strings.Trim(d.Patch.Msgid, "<>") }</code></a>
+								} else {
+									<code>{ strings.Trim(d.Patch.Msgid, "<>") }</code>
+								}
+							</td>
+						</tr>
+						<tr>
+							<th>State</th>
+							<td>
+								if d.CanEdit {
+									<select name="state">
+										for _, s := range d.States {
+											if d.Patch.StateID != nil && s.ID == *d.Patch.StateID {
+												<option value={ fmt.Sprintf("%d", s.ID) } selected>{ s.Name }</option>
+											} else {
+												<option value={ fmt.Sprintf("%d", s.ID) }>{ s.Name }</option>
+											}
+										}
+									</select>
+								} else if d.Patch.State != nil {
+									{ d.Patch.State.Name }
+								}
+							</td>
+						</tr>
+						<tr>
+							<th>Delegate</th>
+							<td>
+								if d.CanEdit {
+									<select name="delegate">
+										<option value="">------</option>
+										for _, u := range d.Delegates {
+											if d.Patch.DelegateID != nil && u.ID == *d.Patch.DelegateID {
+												<option value={ fmt.Sprintf("%d", u.ID) } selected>{ u.Username }</option>
+											} else {
+												<option value={ fmt.Sprintf("%d", u.ID) }>{ u.Username }</option>
+											}
+										}
+									</select>
+								} else if d.Patch.Delegate != nil {
+									{ d.Patch.Delegate.Username }
+								}
+							</td>
+						</tr>
+						<tr>
+							<th>Archived</th>
+							<td>
+								if d.CanEdit {
+									if d.Patch.Archived {
+										<input type="checkbox" name="archived" value="true" checked/>
+									} else {
+										<input type="checkbox" name="archived" value="true"/>
+									}
+									<button type="submit">Update</button>
+								} else {
+									if d.Patch.Archived {
+										Yes
+									} else {
+										No
+									}
+								}
+							</td>
+						</tr>
+						<tr>
+							<th>Headers</th>
+							<td>
+								<details>
+									<summary>show</summary>
+									<pre>{ d.Patch.Headers }</pre>
+								</details>
+							</td>
+						</tr>
+						if d.Patch.CommitRef != nil && *d.Patch.CommitRef != "" {
+							<tr>
+								<th>Commit</th>
+								<td><code>{ *d.Patch.CommitRef }</code></td>
+							</tr>
+						}
+						if d.Patch.PullURL != nil && *d.Patch.PullURL != "" {
+							<tr>
+								<th>Pull URL</th>
+								<td><a href={ templ.SafeURL(*d.Patch.PullURL) }>{ *d.Patch.PullURL }</a></td>
+							</tr>
+						}
+						if d.Series != nil {
+							<tr>
+								<th>Series</th>
+								<td>
+									<details>
+										<summary>
+											<a href={ templ.SafeURL(fmt.Sprintf("/project/%s/list/?series=%d", d.Project.Linkname, d.Series.ID)) }>
+												if d.Series.Name != nil {
+													{ *d.Series.Name }
+												} else {
+													{ fmt.Sprintf("Series #%d", d.Series.ID) }
+												}
+											</a>
+										</summary>
+										<ul>
+											if d.Cover != nil {
+												<li>
+													<a href={ templ.SafeURL(coverURL(d.Project.Linkname, d.Cover.Msgid)) }>
+														{ d.Cover.Name }
+													</a>
+												</li>
+											}
+											for _, sp := range d.SeriesPatches {
+												<li>
+													if sp.Current {
+														{ sp.Name }
+													} else {
+														<a href={ templ.SafeURL(sp.URL) }>{ sp.Name }</a>
+													}
+												</li>
+											}
+										</ul>
+									</details>
+								</td>
+							</tr>
+							for k, v := range d.SeriesMetadata {
+								<tr>
+									<th>{ k }</th>
+									<td>
+										if isURL(v) {
+											<a href={ templ.SafeURL(v) }>{ v }</a>
+										} else {
+											<code>{ v }</code>
+										}
+									</td>
+								</tr>
+							}
+							if d.PreviousSeries != nil || len(d.NextSeries) > 0 {
+								<tr>
+									<th>Versions</th>
+									<td>
+										if d.PreviousSeries != nil {
+											<a href={ templ.SafeURL(fmt.Sprintf("/project/%s/list/?series=%d", d.Project.Linkname, d.PreviousSeries.ID)) }>
+												{ fmt.Sprintf("v%d", d.PreviousSeries.Version) }
+											</a>
+											{ " " }
+										}
+										<strong>{ fmt.Sprintf("v%d", d.Series.Version) }</strong>
+										for _, ns := range d.NextSeries {
+											{ " " }
+											<a href={ templ.SafeURL(fmt.Sprintf("/project/%s/list/?series=%d", d.Project.Linkname, ns.ID)) }>
+												{ fmt.Sprintf("v%d", ns.Version) }
+											</a>
+										}
+									</td>
+								</tr>
+							}
+						}
+					</tbody>
+				</table>
+			</submission-meta>
+		</form>
+		if len(d.Checks) > 0 {
+			<h2>Checks</h2>
+			<table>
+				<thead>
+					<tr>
+						<th>Context</th>
+						<th>Check</th>
+						<th>Description</th>
+					</tr>
+				</thead>
+				<tbody>
+					for _, c := range d.Checks {
+						<tr>
+							<td>{ c.Context }</td>
+							<td>
+								@checkState(c.State)
+							</td>
+							<td>
+								if c.TargetURL != "" {
+									<a href={ templ.SafeURL(c.TargetURL) }>{ c.Description }</a>
+								} else {
+									{ c.Description }
+								}
+							</td>
+						</tr>
+					}
+				</tbody>
+			</table>
+		}
+		if len(d.Related) > 0 {
+			<h2>Related</h2>
+			<ul>
+				for _, r := range d.Related {
+					<li>
+						<a href={ templ.SafeURL(fmt.Sprintf("/patch/%d/", r.ID)) }>
+							{ r.Name }
+						</a>
+					</li>
+				}
+			</ul>
+		}
+		<h2>Commit Message</h2>
+		<comment-header>
+			if d.Patch.Submitter != nil {
+				@personDisplay(d.Patch.Submitter, &d.Project)
+			}
+			<span>{ d.Patch.Date.Format("Jan. 2, 2006, 15:04. UTC") }</span>
+		</comment-header>
+		<pre>
+			@templ.Raw(highlightMessage(commitMessage(d.Patch)))
+		</pre>
+		if len(d.Comments) > 0 {
+			<h2>Comments</h2>
+			for _, c := range d.Comments {
+				<article id={ fmt.Sprintf("comment-%d", c.ID) }>
+					<comment-header>
+						if c.Submitter != nil {
+							@personDisplay(c.Submitter, &d.Project)
+						}
+						<span>{ c.Date.Format("Jan. 2, 2006, 15:04. UTC") }</span>
+						if c.Addressed != nil {
+							if *c.Addressed {
+								<span class="addressed">addressed</span>
+							} else {
+								<span class="unaddressed">unaddressed</span>
+							}
+						}
+						if d.CanEdit {
+							<form method="post" action={ templ.SafeURL(fmt.Sprintf("%scomment/%d/addressed", patchURL(d.Project.Linkname, d.Patch.Msgid), c.ID)) } style="display:inline">
+								<input type="hidden" name="csrftoken" value={ d.PC.CSRFToken }/>
+								if c.Addressed != nil && *c.Addressed {
+									<input type="hidden" name="addressed" value="false"/>
+									<button type="submit" class="small">mark unaddressed</button>
+								} else {
+									<input type="hidden" name="addressed" value="true"/>
+									<button type="submit" class="small">mark addressed</button>
+								}
+							</form>
+						}
+					</comment-header>
+					if c.Content != nil {
+						<pre>{ *c.Content }</pre>
+					}
+				</article>
+			}
+		}
+		if d.Patch.Diff != nil && *d.Patch.Diff != "" {
+			<title-bar>
+				<h2>Patch</h2>
+				@downloadLinks(d.Patch.ID, d.Project.Linkname, d.Patch.Msgid, d.Series)
+			</title-bar>
+			<patch-diff>
+				<pre>
+					@templ.Raw(highlightDiff(*d.Patch.Diff))
+				</pre>
+			</patch-diff>
+		}
+	}
+}
+
+templ personDisplay(person *db.Person, proj *db.Project) {
+	<a href={ templ.SafeURL(fmt.Sprintf("/project/%s/list/?submitter=%d", proj.Linkname, person.ID)) }>
+		{ personName(person) }
+	</a>
+}

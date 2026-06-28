@@ -16,9 +16,10 @@ endif
 .PHONY: all
 all: pw
 
-src = $(shell git ls-files '*.go')
+src = $(shell git ls-files ':!:*_templ.go' '*.go' '*.css' '*.templ')
 
 pw: $(src)
+	$(GO) generate ./...
 	$(GO) build -trimpath -o pw ./cmd/pw
 
 import_reviser ?= github.com/incu6us/goimports-reviser/v3@v3.12.6
@@ -33,6 +34,7 @@ test:
 
 .PHONY: lint
 lint:
+	$(GO) generate ./...
 	@echo '[goimports-reviser]'
 	$Q ! $(GO) run $(import_reviser) $(import_reviser_flags) -list-diff -output stdout ./... | grep . || { \
 		echo 'error: above files need import sorting'; \

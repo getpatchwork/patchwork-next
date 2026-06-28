@@ -1,0 +1,315 @@
+// Patchwork - automated patch tracking system
+// Copyright (C) The Patchwork Contributors (see CONTRIBUTORS)
+//
+// SPDX-License-Identifier: GPL-2.0-or-later
+
+package web
+
+import (
+	"fmt"
+	"strings"
+
+	"github.com/getpatchwork/patchwork/pkg/db"
+)
+
+type patchListData struct {
+	PC          pageContext
+	Project     db.Project
+	Patches     []db.Patch
+	Filters     []appliedFilter
+	Sort        string
+	Page        int
+	PerPage     int
+	Total       int
+	TotalPages  int
+	BaseQuery   string
+	SeriesNames map[int]string
+	TagAbbrevs  []string
+	Bundles     []db.Bundle
+	States      []db.State
+	Delegates   []db.User
+}
+
+type appliedFilter struct {
+	Label     string
+	Value     string
+	RemoveURL string
+}
+
+templ patchListPage(d patchListData) {
+	@layout(d.Project.Name, []breadcrumb{
+		{Label: d.Project.Name, URL: "/project/" + d.Project.Linkname + "/"},
+		{Label: "Patches"},
+	}, d.PC) {
+		<patch-count>
+			if len(d.Filters) > 0 {
+				Show patches with
+				for i, f := range d.Filters {
+					if i > 0 {
+						{ " / " }
+					}
+					{ f.Label } = <strong>{ f.Value }</strong>
+					<a href={ templ.SafeURL(f.RemoveURL) } title="Remove filter">&times;</a>
+				}
+				{ " / " }
+			}
+			{ intStr(d.Total) } patches
+			{ " | " }
+			<a href={ templ.SafeURL("/project/" + d.Project.Linkname + "/bundles/") }>Bundles</a>
+		</patch-count>
+		<patch-filters>
+			<form method="get" action={ templ.SafeURL("/project/" + d.Project.Linkname + "/list") }>
+				<select name="state" title="State">
+					<option value="*">Action required</option>
+					<option value="all">All states</option>
+					for _, s := range d.States {
+						<option value={ intStr(int(s.ID)) }>{ s.Name }</option>
+					}
+				</select>
+				<fieldset title="Archived">
+					<legend>Archived</legend>
+					<label><input type="radio" name="archive" value="" checked/> No</label>
+					<label><input type="radio" name="archive" value="true"/> Yes</label>
+					<label><input type="radio" name="archive" value="both"/> Both</label>
+				</fieldset>
+				<select name="delegate" title="Delegate">
+					<option value="">Delegate...</option>
+					for _, u := range d.Delegates {
+						<option value={ fmt.Sprintf("%d", u.ID) }>{ u.Username }</option>
+					}
+				</select>
+				<input type="text" name="submitter" placeholder="Submitter" title="Submitter"/>
+				<input type="text" name="q" placeholder="Search" title="Search"/>
+				<button type="submit">Filter</button>
+			</form>
+		</patch-filters>
+		<form method="post" action={ templ.SafeURL("/project/" + d.Project.Linkname + "/list/") }>
+			<input type="hidden" name="csrftoken" value={ d.PC.CSRFToken }/>
+			if d.PC.User != nil {
+				<patch-actions>
+					<select name="change_state" title="Change state">
+						<option value="">Change state...</option>
+						for _, s := range d.States {
+							<option value={ fmt.Sprintf("%d", s.ID) }>{ s.Name }</option>
+						}
+					</select>
+					<select name="change_delegate" title="Change delegate">
+						<option value="">Delegate...</option>
+						<option value="clear">Nobody</option>
+						for _, u := range d.Delegates {
+							<option value={ fmt.Sprintf("%d", u.ID) }>{ u.Username }</option>
+						}
+					</select>
+					<select name="change_archive" title="Archive">
+						<option value="">No change</option>
+						<option value="true">Archive</option>
+						<option value="false">Unarchive</option>
+					</select>
+					<button type="submit" name="action" value="update">Update</button>
+					<bundle-actions>
+						if len(d.Bundles) > 0 {
+							<select name="bundle_id" title="Existing bundle">
+								<option value="">Add to bundle...</option>
+								for _, b := range d.Bundles {
+									<option value={ fmt.Sprintf("%d", b.ID) }>{ b.Name }</option>
+								}
+							</select>
+							<button type="submit" name="action" value="add-to-bundle">Add</button>
+						}
+						<input type="text" name="new_bundle" placeholder="New bundle name"/>
+						<button type="submit" name="action" value="create-bundle">Create</button>
+					</bundle-actions>
+				</patch-actions>
+			}
+			<patch-list>
+				<table>
+					<thead>
+						<tr>
+							if d.PC.User != nil {
+								<th><input type="checkbox" title="Select all" id="select-all"/></th>
+							}
+							@sortHeader("Patch", "name", d)
+							<th>Series</th>
+							<th>
+								for i, a := range d.TagAbbrevs {
+									if i > 0 {
+										{ "/" }
+									}
+									{ a }
+								}
+							</th>
+							<th><span title="Success / Warning / Fail">S/W/F</span></th>
+							@sortHeader("Date", "date", d)
+							@sortHeader("Submitter", "submitter", d)
+							@sortHeader("Delegate", "delegate", d)
+							@sortHeader("State", "state", d)
+						</tr>
+					</thead>
+					<tbody>
+						for _, p := range d.Patches {
+							<tr>
+								if d.PC.User != nil {
+									<td><input type="checkbox" name="patch_id" value={ fmt.Sprintf("%d", p.ID) }/></td>
+								}
+								<td>
+									<a href={ templ.SafeURL(patchURL(d.Project.Linkname, p.Msgid)) }>
+										{ truncate(p.Name, 100) }
+									</a>
+								</td>
+								<td>
+									if p.SeriesID != nil {
+										<a href={ templ.SafeURL(fmt.Sprintf("/project/%s/list/?series=%d", d.Project.Linkname, *p.SeriesID)) }>
+											if name, ok := d.SeriesNames[*p.SeriesID]; ok && name != "" {
+												{ truncate(name, 80) }
+											} else {
+												{ fmt.Sprintf("#%d", *p.SeriesID) }
+											}
+										</a>
+									}
+								</td>
+								<td>
+									@tagCounts(d.TagAbbrevs, p.Tags)
+								</td>
+								<td>
+									@checkCounts(p.CheckCounts)
+								</td>
+								<td>{ p.Date.Format("2006-01-02") }</td>
+								<td>
+									if p.Submitter != nil {
+										<a href={ templ.SafeURL(fmt.Sprintf("/project/%s/list/?submitter=%d", d.Project.Linkname, p.SubmitterID)) }>
+											{ personName(p.Submitter) }
+										</a>
+									}
+								</td>
+								<td>
+									if p.Delegate != nil {
+										<a href={ templ.SafeURL(fmt.Sprintf("/project/%s/list/?delegate=%d", d.Project.Linkname, *p.DelegateID)) }>
+											{ p.Delegate.Username }
+										</a>
+									}
+								</td>
+								<td>
+									if p.State != nil {
+										{ p.State.Name }
+									}
+								</td>
+							</tr>
+						}
+						if len(d.Patches) == 0 {
+							<tr>
+								<td colspan="9">No patches to display.</td>
+							</tr>
+						}
+					</tbody>
+				</table>
+			</patch-list>
+		</form>
+		if d.PC.User != nil {
+			<script>
+				(function() {
+					var all = document.getElementById("select-all");
+					var boxes = document.querySelectorAll("input[name=patch_id]");
+					var last = -1;
+					all.addEventListener("click", function() {
+						boxes.forEach(function(c) { c.checked = all.checked; });
+					});
+					boxes.forEach(function(c, i) {
+						c.addEventListener("click", function(e) {
+							if (e.shiftKey && last >= 0) {
+								var lo = Math.min(last, i);
+								var hi = Math.max(last, i);
+								for (var j = lo; j <= hi; j++) {
+									boxes[j].checked = c.checked;
+								}
+							}
+							last = i;
+						});
+					});
+				})();
+			</script>
+		}
+		if d.TotalPages > 1 {
+			@pagination(d.Page, d.TotalPages, d.BaseQuery)
+		}
+	}
+}
+
+templ tagCounts(abbrevs []string, tags map[string]int) {
+	for i, a := range abbrevs {
+		if i > 0 {
+			{ " " }
+		}
+		if c, ok := tags[a]; ok && c > 0 {
+			{ intStr(c) }
+		} else {
+			{ "-" }
+		}
+	}
+}
+
+templ checkCounts(counts [4]int) {
+	if counts[1] > 0 {
+		<check-ok>{ intStr(counts[1]) }</check-ok>
+	} else {
+		{ "-" }
+	}
+	{ "/" }
+	if counts[2] > 0 {
+		<check-warn>{ intStr(counts[2]) }</check-warn>
+	} else {
+		{ "-" }
+	}
+	{ "/" }
+	if counts[3] > 0 {
+		<check-fail>{ intStr(counts[3]) }</check-fail>
+	} else {
+		{ "-" }
+	}
+}
+
+templ checkState(s db.CheckState) {
+	switch int16(s) {
+		case 1:
+			<check-ok>success</check-ok>
+		case 2:
+			<check-warn>warning</check-warn>
+		case 3:
+			<check-fail>fail</check-fail>
+		default:
+			pending
+	}
+}
+
+templ sortHeader(label string, field string, d patchListData) {
+	<th>
+		if strings.TrimPrefix(d.Sort, "-") == field {
+			if strings.HasPrefix(d.Sort, "-") {
+				<a href={ templ.SafeURL(sortURL(d, field)) }>{ label } &#9650;</a>
+			} else {
+				<a href={ templ.SafeURL(sortURL(d, "-"+field)) }>{ label } &#9660;</a>
+			}
+		} else {
+			<a href={ templ.SafeURL(sortURL(d, field)) }>{ label }</a>
+		}
+	</th>
+}
+
+templ pagination(page int, totalPages int, baseQuery string) {
+	<nav>
+		if page > 1 {
+			<a href={ templ.SafeURL(pageURL(baseQuery, page-1)) }>&laquo; Prev</a>
+		}
+		for i := 1; i <= totalPages; i++ {
+			if i == page {
+				<span>{ intStr(i) }</span>
+			} else if i <= 3 || i > totalPages-3 || (i >= page-2 && i <= page+2) {
+				<a href={ templ.SafeURL(pageURL(baseQuery, i)) }>{ intStr(i) }</a>
+			} else if i == 4 || i == totalPages-3 {
+				<span>&hellip;</span>
+			}
+		}
+		if page < totalPages {
+			<a href={ templ.SafeURL(pageURL(baseQuery, page+1)) }>Next &raquo;</a>
+		}
+	</nav>
+}

@@ -1,0 +1,67 @@
+// Patchwork - automated patch tracking system
+// Copyright (C) The Patchwork Contributors (see CONTRIBUTORS)
+//
+// SPDX-License-Identifier: GPL-2.0-or-later
+
+package web
+
+import "github.com/getpatchwork/patchwork/pkg/db"
+
+type breadcrumb struct {
+	Label string
+	URL   string
+}
+
+type pageContext struct {
+	User      *db.User
+	CSRFToken string
+}
+
+templ layout(title string, crumbs []breadcrumb, pc pageContext) {
+	<!DOCTYPE html>
+	<html lang="en">
+		<head>
+			<meta charset="utf-8"/>
+			<meta name="viewport" content="width=device-width, initial-scale=1"/>
+			<title>{ title } - Patchwork</title>
+			<link rel="stylesheet" href="/static/style.css"/>
+		</head>
+		<body>
+			<header>
+				<nav>
+					<ul>
+						<li><a href="/">Patchwork</a></li>
+						for _, c := range crumbs {
+							<li>
+								if c.URL != "" {
+									<a href={ templ.SafeURL(c.URL) }>{ c.Label }</a>
+								} else {
+									<span>{ c.Label }</span>
+								}
+							</li>
+						}
+					</ul>
+					<span>
+						if pc.User != nil {
+							<a href="/user/bundles/">Bundles</a>
+							<a href="/user/">{ pc.User.Username }</a>
+							<form method="post" action="/user/logout/">
+								<input type="hidden" name="csrftoken" value={ pc.CSRFToken }/>
+								<button type="submit">Logout</button>
+							</form>
+						} else {
+							<a href="/user/login/">Login</a>
+							<a href="/register/">Register</a>
+						}
+					</span>
+				</nav>
+			</header>
+			<main>
+				{ children... }
+			</main>
+			<footer>
+				Patchwork
+			</footer>
+		</body>
+	</html>
+}

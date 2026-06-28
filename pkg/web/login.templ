@@ -1,0 +1,25 @@
+// Patchwork - automated patch tracking system
+// Copyright (C) The Patchwork Contributors (see CONTRIBUTORS)
+//
+// SPDX-License-Identifier: GPL-2.0-or-later
+
+package web
+
+templ loginPage(pc pageContext, errMsg string, next string) {
+	@layout("Login", nil, pc) {
+		<auth-form>
+			<h1>Login</h1>
+			if errMsg != "" {
+				<error-msg>{ errMsg }</error-msg>
+			}
+			<form method="post" action="/user/login/">
+				<input type="hidden" name="csrftoken" value={ pc.CSRFToken }/>
+				<input type="text" name="username" placeholder="Username" required autofocus/>
+				<input type="password" name="password" placeholder="Password" required/>
+				<input type="hidden" name="next" value={ next }/>
+				<button type="submit">Login</button>
+			</form>
+			<p><a href="/user/password-reset/">Forgot password?</a></p>
+		</auth-form>
+	}
+}

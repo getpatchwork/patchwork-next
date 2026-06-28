@@ -1,0 +1,233 @@
+// Patchwork - automated patch tracking system
+// Copyright (C) The Patchwork Contributors (see CONTRIBUTORS)
+//
+// SPDX-License-Identifier: GPL-2.0-or-later
+
+package web
+
+import "fmt"
+
+templ profilePage(d profileData) {
+	@layout("Profile", []breadcrumb{{Label: d.User.Username}}, d.PC) {
+		<h1>{ d.User.Username }</h1>
+		<profile-columns>
+			<profile-left>
+				if len(d.MaintainerProjects) > 0 {
+					<submission-meta>
+						<h2>Maintainer of</h2>
+						<ul>
+							for _, p := range d.MaintainerProjects {
+								<li><a href={ templ.SafeURL("/project/" + p.Linkname + "/") }>{ p.Name }</a></li>
+							}
+						</ul>
+					</submission-meta>
+				}
+				if len(d.ContributorProjects) > 0 {
+					<submission-meta>
+						<h2>Contributor to</h2>
+						<ul>
+							for _, p := range d.ContributorProjects {
+								<li><a href={ templ.SafeURL("/project/" + p.Linkname + "/") }>{ p.Name }</a></li>
+							}
+						</ul>
+					</submission-meta>
+				}
+				<submission-meta>
+					<h2>Todo</h2>
+					<p>
+						Your <a href="/user/todo/">todo list</a> contains patches
+						delegated to you.
+					</p>
+				</submission-meta>
+				<submission-meta>
+					<h2>Linked email addresses</h2>
+					<p>
+						Email addresses associated with your account.
+						Adding alternative addresses allows grouping contributions
+						made under different addresses.
+					</p>
+					<table>
+						<thead>
+							<tr>
+								<th>Email</th>
+								<th>Notifications</th>
+								<th></th>
+							</tr>
+						</thead>
+						<tbody>
+							for _, e := range d.LinkedEmails {
+								<tr>
+									<td>{ e.Email }</td>
+									<td>
+										if e.Email != d.User.Email {
+											<form method="post" action={ templ.SafeURL(fmt.Sprintf("/user/unlink/%d/", e.PersonID)) }>
+												<input type="hidden" name="csrftoken" value={ d.PC.CSRFToken }/>
+												<button type="submit">Unlink</button>
+											</form>
+										}
+									</td>
+								</tr>
+							}
+							<tr>
+								<td colspan="3">
+									<form method="post" action="/user/link/">
+										<input type="hidden" name="csrftoken" value={ d.PC.CSRFToken }/>
+										<input type="email" name="email" placeholder="Add email address"/>
+										<button type="submit">Add</button>
+									</form>
+								</td>
+							</tr>
+						</tbody>
+					</table>
+				</submission-meta>
+			</profile-left>
+			<profile-right>
+				<submission-meta>
+					<h2>Bundles</h2>
+					if len(d.Bundles) > 0 {
+						<ul>
+							for _, b := range d.Bundles {
+								<li>
+									if b.Owner != nil {
+										<a href={ templ.SafeURL(fmt.Sprintf("/bundle/%s/%s/", b.Owner.Username, b.Name)) }>
+											{ b.Name }
+										</a>
+									} else {
+										{ b.Name }
+									}
+								</li>
+							}
+						</ul>
+						<p><a href="/user/bundles/">Manage bundles</a></p>
+					} else {
+						<p>No bundles.</p>
+					}
+				</submission-meta>
+				<submission-meta>
+					<h2>Settings</h2>
+					<form method="post" action="/user/">
+						<input type="hidden" name="csrftoken" value={ d.PC.CSRFToken }/>
+						<table>
+							<tr>
+								<th>Items per page</th>
+								<td><input type="number" name="items_per_page" value={ fmt.Sprintf("%d", d.User.ItemsPerPage) } min="1"/></td>
+							</tr>
+							<tr>
+								<th>Show patch IDs</th>
+								<td>
+									if d.User.ShowIds {
+										<input type="checkbox" name="show_ids" checked/>
+									} else {
+										<input type="checkbox" name="show_ids"/>
+									}
+								</td>
+							</tr>
+							<tr>
+								<td colspan="2"><button type="submit">Apply</button></td>
+							</tr>
+						</table>
+					</form>
+				</submission-meta>
+				<submission-meta>
+					<h2>Authentication</h2>
+					<table>
+						<tr>
+							<th>Password</th>
+							<td><a href="/user/password-change/">Change password</a></td>
+						</tr>
+						<tr>
+							<th>API Token</th>
+							<td>
+								if d.Token != "" {
+									<code>{ d.Token }</code>
+								} else {
+									<em>Not generated</em>
+								}
+							</td>
+						</tr>
+						<tr>
+							<th></th>
+							<td>
+								<form method="post" action="/user/generate-token/">
+									<input type="hidden" name="csrftoken" value={ d.PC.CSRFToken }/>
+									if d.Token != "" {
+										<button type="submit">Regenerate token</button>
+									} else {
+										<button type="submit">Generate token</button>
+									}
+								</form>
+							</td>
+						</tr>
+					</table>
+				</submission-meta>
+			</profile-right>
+		</profile-columns>
+	}
+}
+
+templ linkEmailPage(pc pageContext, errMsg string) {
+	@layout("Link Email", []breadcrumb{{Label: "Link Email"}}, pc) {
+		<auth-form>
+			<h1>Link Email</h1>
+			if errMsg != "" {
+				<error-msg>{ errMsg }</error-msg>
+			}
+			<form method="post" action="/user/link/">
+				<input type="hidden" name="csrftoken" value={ pc.CSRFToken }/>
+				<input type="email" name="email" placeholder="Email address" required/>
+				<button type="submit">Send confirmation</button>
+			</form>
+		</auth-form>
+	}
+}
+
+templ changePasswordPage(pc pageContext, errMsg string) {
+	@layout("Change Password", []breadcrumb{{Label: "Change Password"}}, pc) {
+		<auth-form>
+			<h1>Change Password</h1>
+			if errMsg != "" {
+				<error-msg>{ errMsg }</error-msg>
+			}
+			<form method="post" action="/user/password-change/">
+				<input type="hidden" name="csrftoken" value={ pc.CSRFToken }/>
+				<input type="password" name="old_password" placeholder="Current password" required/>
+				<input type="password" name="new_password" placeholder="New password" required/>
+				<input type="password" name="confirm_password" placeholder="Confirm new password" required/>
+				<button type="submit">Change password</button>
+			</form>
+		</auth-form>
+	}
+}
+
+templ passwordResetPage(pc pageContext, errMsg string) {
+	@layout("Password Reset", []breadcrumb{{Label: "Password Reset"}}, pc) {
+		<auth-form>
+			<h1>Reset Password</h1>
+			if errMsg != "" {
+				<error-msg>{ errMsg }</error-msg>
+			}
+			<form method="post" action="/user/password-reset/">
+				<input type="hidden" name="csrftoken" value={ pc.CSRFToken }/>
+				<input type="email" name="email" placeholder="Email address" required/>
+				<button type="submit">Send reset link</button>
+			</form>
+		</auth-form>
+	}
+}
+
+templ passwordResetConfirmPage(pc pageContext, key string, errMsg string) {
+	@layout("Set New Password", []breadcrumb{{Label: "Set New Password"}}, pc) {
+		<auth-form>
+			<h1>Set New Password</h1>
+			if errMsg != "" {
+				<error-msg>{ errMsg }</error-msg>
+			}
+			<form method="post" action={ templ.SafeURL("/password-reset/" + key + "/") }>
+				<input type="hidden" name="csrftoken" value={ pc.CSRFToken }/>
+				<input type="password" name="new_password" placeholder="New password" required/>
+				<input type="password" name="confirm_password" placeholder="Confirm password" required/>
+				<button type="submit">Set password</button>
+			</form>
+		</auth-form>
+	}
+}

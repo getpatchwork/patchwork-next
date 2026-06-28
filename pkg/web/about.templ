@@ -1,0 +1,24 @@
+// Patchwork - automated patch tracking system
+// Copyright (C) The Patchwork Contributors (see CONTRIBUTORS)
+//
+// SPDX-License-Identifier: GPL-2.0-or-later
+
+package web
+
+templ aboutPage(pc pageContext) {
+	@layout("About", []breadcrumb{{Label: "About"}}, pc) {
+		<h1>About Patchwork</h1>
+		<p>
+			Patchwork is a web-based patch tracking system designed to
+			facilitate the contribution and management of contributions
+			to an open-source project.
+		</p>
+		<submission-meta>
+			<h2>Links</h2>
+			<ul>
+				<li><a href="https://github.com/getpatchwork/patchwork">Patchwork on GitHub</a></li>
+				<li><a href="https://patchwork.readthedocs.io/">Documentation</a></li>
+			</ul>
+		</submission-meta>
+	}
+}
