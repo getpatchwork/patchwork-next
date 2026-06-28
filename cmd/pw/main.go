@@ -10,6 +10,7 @@ import (
 
 	"github.com/getpatchwork/patchwork/cmd/pw/admin"
 	pwdb "github.com/getpatchwork/patchwork/cmd/pw/db"
+	"github.com/getpatchwork/patchwork/cmd/pw/http"
 	"github.com/getpatchwork/patchwork/cmd/pw/ingress"
 	"github.com/getpatchwork/patchwork/cmd/pw/pw"
 	"github.com/getpatchwork/patchwork/pkg/config"
@@ -23,6 +24,7 @@ type CLI struct {
 	Admin   admin.CLI   `cmd:"" help:"Administration CLI."`
 	DB      pwdb.CLI    `cmd:"" name:"db" help:"Database management."`
 	Ingress ingress.CLI `cmd:"" help:"Ingress SMTP/LMTP daemon."`
+	Http    http.CLI    `cmd:"" help:"HTTP server daemon."`
 }
 
 func main() {
