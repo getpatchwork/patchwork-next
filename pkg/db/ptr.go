@@ -1,0 +1,10 @@
+// Patchwork - automated patch tracking system
+// Copyright (C) The Patchwork Contributors (see CONTRIBUTORS)
+//
+// SPDX-License-Identifier: GPL-2.0-or-later
+
+package db
+
+func Ptr[T any](v T) *T {
+	return &v
+}

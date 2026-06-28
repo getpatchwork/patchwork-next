@@ -6,6 +6,7 @@
 package db
 
 import (
+	"context"
 	"crypto/rand"
 	"database/sql"
 	"encoding/hex"
@@ -107,4 +108,47 @@ func Open(cfg *config.Config) (*bun.DB, error) {
 	}
 
 	return bun.NewDB(conn, dialect), nil
+}
+
+// Queries provides typed database access methods. It wraps a bun.IDB
+// (either *bun.DB or bun.Tx) and the context for query execution.
+type Queries struct {
+	Ctx context.Context
+	DB  bun.IDB
+}
+
+// New creates a Queries handle without a transaction.
+func New(ctx context.Context, database bun.IDB) *Queries {
+	return &Queries{Ctx: ctx, DB: database}
+}
+
+// Begin starts a transaction and returns a Queries handle.
+func Begin(ctx context.Context, database *bun.DB) (*Queries, error) {
+	tx, err := database.BeginTx(ctx, nil)
+	if err != nil {
+		return nil, err
+	}
+	return &Queries{Ctx: ctx, DB: tx}, nil
+}
+
+func (q *Queries) Commit() error {
+	if tx, ok := q.DB.(bun.Tx); ok {
+		if err := tx.Commit(); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func (q *Queries) Rollback() error {
+	if tx, ok := q.DB.(bun.Tx); ok {
+		return tx.Rollback()
+	}
+	return nil
+}
+
+func (q *Queries) Insert(model any) error {
+	return q.DB.NewInsert().Model(model).
+		Returning("*").
+		Scan(q.Ctx)
 }
