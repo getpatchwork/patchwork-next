@@ -110,11 +110,44 @@ func Open(cfg *config.Config) (*bun.DB, error) {
 	return bun.NewDB(conn, dialect), nil
 }
 
+// EventBus is the interface satisfied by *events.Bus. Defined here to
+// avoid a circular import between pkg/db and pkg/events.
+type EventBus interface {
+	Enqueue(*Event)
+}
+
+type busCtxKey struct{}
+
+// WithBus stores an EventBus in the context.
+func WithBus(ctx context.Context, bus EventBus) context.Context {
+	return context.WithValue(ctx, busCtxKey{}, bus)
+}
+
+func GetBus(ctx context.Context) EventBus {
+	if bus, ok := ctx.Value(busCtxKey{}).(EventBus); ok {
+		return bus
+	}
+	return nil
+}
+
 // Queries provides typed database access methods. It wraps a bun.IDB
 // (either *bun.DB or bun.Tx) and the context for query execution.
 type Queries struct {
-	Ctx context.Context
-	DB  bun.IDB
+	Ctx           context.Context
+	DB            bun.IDB
+	Events        EventBus
+	pendingEvents []Event
+}
+
+// EnqueueEvent buffers an event to be sent to the bus after the
+// transaction commits successfully. If no transaction is active, the
+// event is sent immediately.
+func (q *Queries) EnqueueEvent(e Event) {
+	if _, ok := q.DB.(bun.Tx); ok {
+		q.pendingEvents = append(q.pendingEvents, e)
+		return
+	}
+	q.Events.Enqueue(&e)
 }
 
 // New creates a Queries handle without a transaction.
@@ -122,25 +155,32 @@ func New(ctx context.Context, database bun.IDB) *Queries {
 	return &Queries{Ctx: ctx, DB: database}
 }
 
-// Begin starts a transaction and returns a Queries handle.
+// Begin starts a transaction and returns a Queries handle. If an
+// EventBus is stored in the context (via WithBus), it is propagated.
 func Begin(ctx context.Context, database *bun.DB) (*Queries, error) {
 	tx, err := database.BeginTx(ctx, nil)
 	if err != nil {
 		return nil, err
 	}
-	return &Queries{Ctx: ctx, DB: tx}, nil
+	return &Queries{Ctx: ctx, DB: tx, Events: GetBus(ctx)}, nil
 }
 
 func (q *Queries) Commit() error {
 	if tx, ok := q.DB.(bun.Tx); ok {
 		if err := tx.Commit(); err != nil {
+			q.pendingEvents = nil
 			return err
 		}
 	}
+	for _, e := range q.pendingEvents {
+		q.Events.Enqueue(&e)
+	}
+	q.pendingEvents = nil
 	return nil
 }
 
 func (q *Queries) Rollback() error {
+	q.pendingEvents = nil
 	if tx, ok := q.DB.(bun.Tx); ok {
 		return tx.Rollback()
 	}
