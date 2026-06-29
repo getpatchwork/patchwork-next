@@ -1,3 +1,5 @@
 /patchwork.toml
 /pw
 *_templ.go
+/docs/.venv
+/docs/_build

@@ -1,0 +1,27 @@
+.. Patchwork - automated patch tracking system
+.. Copyright (C) The Patchwork Contributors (see CONTRIBUTORS)
+..
+.. SPDX-License-Identifier: GPL-2.0-or-later
+
+4.0.0
+=====
+
+Patchwork 4.0 is a complete rewrite of the application in Go. The Django/Python
+codebase has been replaced by a single statically compiled binary that serves
+the web interface, REST API, and SMTP ingress daemon.
+
+Highlights:
+
+- Single binary deployment: no Python, no virtualenvs, no WSGI servers.
+- Built-in SMTP/LMTP daemon for receiving emails from Postfix via transport
+  maps.
+- Webhook support for event-driven integrations.
+- Auto-generated OpenAPI documentation served at ``/api/docs``.
+- XML-RPC API removed in favor of the REST API.
+- Database migration tooling for existing Django installations.
+- Compatible with existing user credentials (PBKDF2-SHA256 passwords).
+
+For migration instructions from Django-based Patchwork, see
+:doc:`/deployment/migration`.
+
+.. release-notes::

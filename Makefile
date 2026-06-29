@@ -34,11 +34,22 @@ install: pw
 	install -Dm644 etc/nginx.conf $(DESTDIR)$(sysconfdir)/nginx/conf.d/patchwork.conf
 	$(DESTDIR)$(prefix)/bin/pw config > $(DESTDIR)$(sysconfdir)/patchwork.toml
 
+PYTHON ?= python3
+
+.PHONY: docs
+docs:
+	$Q if ! [ -x docs/.venv/bin/sphinx-build ]; then \
+		set -xe && \
+		$(PYTHON) -m venv docs/.venv && \
+		docs/.venv/bin/pip install -q -r docs/requirements.txt; \
+	fi
+	docs/.venv/bin/sphinx-build -b html docs docs/_build
+
 import_reviser ?= github.com/incu6us/goimports-reviser/v3@v3.12.6
 import_reviser_flags ?= -rm-unused -project-name github.com/getpatchwork/patchwork
 gofumpt ?= mvdan.cc/gofumpt@v0.9.2
 golangci_lint ?= github.com/golangci/golangci-lint/v2/cmd/golangci-lint@v2.12.2
-license_exclude = ':!:*.md' ':!:*.asc' ':!:CONTRIBUTORS' ':!:LICENSE' ':!:.*' ':!:go.mod' ':!:go.sum' ':!:pkg/mail/testdata'
+license_exclude = ':!:*.md' ':!:*.asc' ':!:*.yaml' ':!:docs/requirements.txt' ':!:*.service' ':!:CONTRIBUTORS' ':!:LICENSE' ':!:.*' ':!:go.mod' ':!:go.sum' ':!:pkg/mail/testdata'
 
 .PHONY: test
 test:

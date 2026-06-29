@@ -1,0 +1,93 @@
+.. Patchwork - automated patch tracking system
+.. Copyright (C) The Patchwork Contributors (see CONTRIBUTORS)
+..
+.. SPDX-License-Identifier: GPL-2.0-or-later
+
+Configuration
+=============
+
+Patchwork is configured through a TOML file. The default configuration can be
+generated with::
+
+    $ pw config
+
+Configuration files are loaded in the following order, with later files
+overriding earlier ones:
+
+1. ``/etc/patchwork.toml``
+2. ``patchwork.toml`` (current directory)
+3. ``$PATCHWORK_TOML`` (environment variable)
+
+Command-line flags take precedence over all configuration files.
+
+
+Settings Reference
+------------------
+
+``[database]``
+~~~~~~~~~~~~~~
+
+``url``
+  Database connection URL. Supported schemes:
+
+  - ``postgres://user:pass@host/dbname?sslmode=disable``
+  - ``mysql://user:pass@host/dbname``
+  - ``sqlite:///path/to/file.db``
+
+``auto-sync``
+  Automatically run pending migrations when the HTTP server starts.
+  Default: ``false``.
+
+``[http]``
+~~~~~~~~~~
+
+``listen``
+  HTTP listen address. Default: ``127.0.0.1:8080``.
+
+``base-url``
+  The public base URL of the Patchwork instance, used for generating links in
+  emails and API responses. Example: ``https://patchwork.example.com``.
+
+``[ingress]``
+~~~~~~~~~~~~~
+
+``listen``
+  SMTP listen address for the ingress daemon. Default: ``127.0.0.1:2525``.
+
+``max-message-size``
+  Maximum email message size in bytes. Default: ``10485760`` (10 MB).
+
+``max-recipients``
+  Maximum number of recipients per message. Default: ``100``.
+
+``[smtp]``
+~~~~~~~~~~
+
+Outgoing mail configuration for notifications.
+
+``transport``
+  SMTP encryption mode. One of ``none``, ``starttls``, ``tls``.
+  Default: ``none``.
+
+``host``
+  SMTP server hostname. Default: ``localhost``.
+
+``port``
+  SMTP server port. Default: ``25``.
+
+``user``
+  SMTP authentication username. Leave empty for unauthenticated delivery.
+
+``password``
+  SMTP authentication password.
+
+``from``
+  Sender email address for outgoing notifications.
+  Default: ``patchwork@localhost``.
+
+
+Global Flags
+------------
+
+``-S``, ``--syslog``
+  Redirect logging to syslog instead of stderr.
