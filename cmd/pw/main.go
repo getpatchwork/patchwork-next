@@ -8,6 +8,7 @@ package main
 import (
 	"context"
 
+	"github.com/getpatchwork/patchwork/cmd/pw/admin"
 	pwdb "github.com/getpatchwork/patchwork/cmd/pw/db"
 	"github.com/getpatchwork/patchwork/cmd/pw/pw"
 	"github.com/getpatchwork/patchwork/pkg/config"
@@ -18,7 +19,8 @@ import (
 type CLI struct {
 	config.Config
 
-	DB pwdb.CLI `cmd:"" name:"db" help:"Database management."`
+	Admin admin.CLI `cmd:"" help:"Administration CLI."`
+	DB    pwdb.CLI  `cmd:"" name:"db" help:"Database management."`
 }
 
 func main() {
