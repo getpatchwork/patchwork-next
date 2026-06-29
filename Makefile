@@ -4,6 +4,14 @@
 # SPDX-License-Identifier: GPL-2.0-or-later
 
 PATCHWORK_VERSION ?= $(shell git describe --long --abbrev=8 --dirty 2>/dev/null || echo v4.0.0-rc3)
+DATE_FMT = +%Y-%m-%d
+ifdef SOURCE_DATE_EPOCH
+DATE ?= $(shell date -u -d "@$(SOURCE_DATE_EPOCH)" "$(DATE_FMT)" 2>/dev/null || \
+		date -u -r "$(SOURCE_DATE_EPOCH)" "$(DATE_FMT)" 2>/dev/null || \
+		date -u "$(DATE_FMT)")
+else
+DATE ?= $(shell date "$(DATE_FMT)")
+endif
 
 GO ?= go
 V ?= 0
@@ -13,6 +21,9 @@ else
 Q = @
 endif
 
+GO_LDFLAGS += -X main.Version=$(PATCHWORK_VERSION)
+GO_LDFLAGS += -X main.Date=$(DATE)
+
 .PHONY: all
 all: pw
 
@@ -20,7 +31,7 @@ src = $(shell git ls-files ':!:*_templ.go' '*.go' '*.css' '*.templ')
 
 pw: $(src)
 	$(GO) generate ./...
-	$(GO) build -trimpath -o pw ./cmd/pw
+	$(GO) build -trimpath -ldflags "$(GO_LDFLAGS)" -o pw ./cmd/pw
 
 prefix ?= /usr
 sysconfdir ?= /etc
@@ -59,6 +70,7 @@ docs:
 		-Dauthor="The Patchwork Contributors" \
 		-Dversion="$(PATCHWORK_VERSION)" \
 		-Drelease="$(PATCHWORK_VERSION)" \
+		-Dtoday="$(DATE)" \
 		-Dexclude_patterns=_build,.venv \
 		-Dhtml_theme=sphinx_rtd_theme \
 		docs docs/_build

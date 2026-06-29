@@ -7,7 +7,12 @@ package main
 
 import (
 	"context"
+	"fmt"
 	"os"
+	"regexp"
+	"runtime"
+
+	"github.com/alecthomas/kong"
 
 	"github.com/getpatchwork/patchwork/cmd/pw/admin"
 	pwdb "github.com/getpatchwork/patchwork/cmd/pw/db"
@@ -22,11 +27,47 @@ import (
 type CLI struct {
 	config.Config
 
+	ShowVersion VersionFlag `name:"version" help:"Print patchwork version and exit."`
+
 	GenCfg  struct{}    `cmd:"" name:"config" help:"Print default configuration to stdout."`
 	Admin   admin.CLI   `cmd:"" help:"Administration CLI."`
 	DB      pwdb.CLI    `cmd:"" name:"db" help:"Database management."`
 	Ingress ingress.CLI `cmd:"" help:"Ingress SMTP/LMTP daemon."`
 	Http    http.CLI    `cmd:"" help:"HTTP server daemon."`
+}
+
+// set at build time
+var (
+	Version string
+	Date    string
+)
+
+type VersionFlag string
+
+func (v VersionFlag) Decode(_ *kong.DecodeContext) error {
+	return nil
+}
+
+func (v VersionFlag) IsBool() bool {
+	return true
+}
+
+func (v VersionFlag) BeforeReset(app *kong.Kong, vars kong.Vars) error {
+	re := regexp.MustCompile(`^v(.+)-(\d+)-g([0-9a-f]+)(-dirty)?$`)
+	m := re.FindStringSubmatch(Version)
+	if m != nil {
+		Version = m[1]
+		if m[2] != "" && m[2] != "0" && m[3] != "" {
+			Version += fmt.Sprintf("+%s+git+%s", m[2], m[3])
+		}
+		if m[4] != "" {
+			Version += "+dirty"
+		}
+	}
+	fmt.Printf("patchwork %s (%s %s %s %s)\n",
+		Version, runtime.Version(), runtime.GOARCH, runtime.GOOS, Date)
+	app.Exit(0)
+	return nil
 }
 
 func main() {
