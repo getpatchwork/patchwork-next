@@ -16,61 +16,62 @@ import (
 	"github.com/uptrace/bun"
 )
 
-// exportTable defines a table to export and an optional source name to read
-// from when the database uses Django naming conventions.
 type exportTable struct {
-	name       string
-	djangoName string
+	// dstName is the table name in the Go schema.
+	dstName string
+	// srcName is the table name in the Django schema.
+	srcName string
+	// optional tables may not exist in older Django versions.
+	optional bool
 }
 
-// Order matters. Tables that references others must be dumped *after*.
+// Order matters. Tables that reference others must be dumped *after*.
 var exportTables = []exportTable{
-	{name: "auth_user", djangoName: "auth_user"},
-	{name: "auth_token", djangoName: "authtoken_token"},
-	{name: "state", djangoName: "patchwork_state"},
-	{name: "tag", djangoName: "patchwork_tag"},
-	{name: "project", djangoName: "patchwork_project"},
-	{name: "project_maintainer", djangoName: "patchwork_userprofile_maintainer_projects"},
-	{name: "delegation_rule", djangoName: "patchwork_delegationrule"},
-	{name: "person", djangoName: "patchwork_person"},
-	{name: "patch_relation", djangoName: "patchwork_patchrelation"},
-	{name: "series", djangoName: "patchwork_series"},
-	{name: "series_reference", djangoName: "patchwork_seriesreference"},
-	{name: "series_metadata", djangoName: "patchwork_seriesmetadata"},
-	{name: "series_dependencies", djangoName: "patchwork_series_dependencies"},
-	{name: "cover", djangoName: "patchwork_cover"},
-	{name: "patch", djangoName: "patchwork_patch"},
-	{name: "patch_tag", djangoName: "patchwork_patchtag"},
-	{name: "patch_comment", djangoName: "patchwork_patchcomment"},
-	{name: "cover_comment", djangoName: "patchwork_covercomment"},
+	{dstName: "auth_user", srcName: "auth_user"},
+	{dstName: "auth_token", srcName: "authtoken_token"},
+	{dstName: "state", srcName: "patchwork_state"},
+	{dstName: "tag", srcName: "patchwork_tag"},
+	{dstName: "project", srcName: "patchwork_project"},
+	{dstName: "project_maintainer", srcName: "patchwork_userprofile_maintainer_projects"},
+	{dstName: "delegation_rule", srcName: "patchwork_delegationrule"},
+	{dstName: "person", srcName: "patchwork_person"},
+	{dstName: "patch_relation", srcName: "patchwork_patchrelation"},
+	{dstName: "series", srcName: "patchwork_series"},
+	{dstName: "series_reference", srcName: "patchwork_seriesreference"},
+	{dstName: "series_metadata", srcName: "patchwork_seriesmetadata", optional: true},
+	{dstName: "series_dependencies", srcName: "patchwork_series_dependencies", optional: true},
+	{dstName: "cover", srcName: "patchwork_cover"},
+	{dstName: "patch", srcName: "patchwork_patch"},
+	{dstName: "patch_tag", srcName: "patchwork_patchtag"},
+	{dstName: "patch_comment", srcName: "patchwork_patchcomment"},
+	{dstName: "cover_comment", srcName: "patchwork_covercomment"},
 	// Deduplicate checks: keep only the latest per (patch, context, user).
 	// Django accumulates duplicate checks; we enforce uniqueness.
-	{name: "ci_check", djangoName: "patchwork_check"},
-	{name: "bundle", djangoName: "patchwork_bundle"},
-	{name: "bundle_patch", djangoName: "patchwork_bundlepatch"},
-	{name: "event", djangoName: "patchwork_event"},
-	{name: "email_confirmation", djangoName: "patchwork_emailconfirmation"},
-	{name: "webhook", djangoName: "patchwork_webhook"},
+	{dstName: "ci_check", srcName: "patchwork_check"},
+	{dstName: "bundle", srcName: "patchwork_bundle"},
+	{dstName: "bundle_patch", srcName: "patchwork_bundlepatch"},
+	{dstName: "event", srcName: "patchwork_event"},
+	{dstName: "email_confirmation", srcName: "patchwork_emailconfirmation"},
+	{dstName: "webhook", srcName: "patchwork_webhook", optional: true},
 }
 
-// Export writes all table data as SQL INSERT statements to w. Tables are
-// exported in foreign key dependency order so the output can be imported into
-// a fresh database.
+// Export reads data from a Django patchwork database and writes SQL
+// INSERT statements to w, using the Go schema table and column names.
+// The output can be imported into a fresh database initialized with
+// "pw db sync". All patchwork 3.x schema variations are supported.
 func Export(ctx context.Context, database *bun.DB, w io.Writer) error {
-	isDjango := isDjangoDatabase(ctx, database)
+	if !hasDjangoMigrations(ctx, database) {
+		return fmt.Errorf("not a Django database (django_migrations table not found)")
+	}
 
 	fmt.Fprint(w, "BEGIN;\n")
 
 	for _, t := range exportTables {
-		srcTable := t.name
-		if isDjango {
-			if t.djangoName == "" {
-				continue
-			}
-			srcTable = t.djangoName
+		if t.optional && !tableExists(ctx, database, t.srcName) {
+			continue
 		}
-		if err := exportTableRows(ctx, database, w, srcTable, t.name, isDjango); err != nil {
-			return fmt.Errorf("export %s: %w", t.name, err)
+		if err := exportTableRows(ctx, database, w, t.srcName, t.dstName); err != nil {
+			return fmt.Errorf("export %s: %w", t.dstName, err)
 		}
 	}
 
@@ -78,9 +79,7 @@ func Export(ctx context.Context, database *bun.DB, w io.Writer) error {
 	return nil
 }
 
-// isDjangoDatabase returns true if the database contains a django_migrations
-// table, indicating it was created by Django.
-func isDjangoDatabase(ctx context.Context, database *bun.DB) bool {
+func hasDjangoMigrations(ctx context.Context, database *bun.DB) bool {
 	_, err := database.NewSelect().
 		TableExpr("django_migrations").
 		Limit(1).
@@ -88,14 +87,52 @@ func isDjangoDatabase(ctx context.Context, database *bun.DB) bool {
 	return err == nil
 }
 
+func tableExists(ctx context.Context, database *bun.DB, name string) bool {
+	var n int
+	_ = database.NewSelect().
+		TableExpr("?", bun.Ident(name)).
+		ColumnExpr("1").
+		Limit(1).
+		Scan(ctx, &n)
+	return n == 1
+}
+
 const batchSize = 100
 
-// columnTransforms maps (srcTable:django) to custom SELECT queries used when
-// column names or structure differ between Django and Go schemas.
-var columnTransforms = map[string]string{
+// dstColumns lists the expected columns for each destination table. When
+// the source table has fewer columns (older Django schema), missing
+// columns get default values.
+var dstColumns = map[string][]string{
+	"project": {
+		"id", "linkname", "name", "listid", "listemail",
+		"subject_match", "web_url", "scm_url", "webscm_url",
+		"list_archive_url", "list_archive_url_format",
+		"commit_url_format", "send_notifications", "use_tags",
+		"show_dependencies", "auto_supersede",
+	},
+	"series": {
+		"id", "project_id", "cover_letter_id", "previous_series_id",
+		"name", "date", "submitter_id", "version", "total",
+	},
+	"patch_comment": {
+		"id", "msgid", "date", "headers", "submitter_id",
+		"content", "patch_id", "addressed",
+	},
+	"cover_comment": {
+		"id", "msgid", "date", "headers", "submitter_id",
+		"content", "cover_id", "addressed",
+	},
+}
+
+// customQueries provide hand-written SELECT queries for tables where
+// the Django schema differs structurally from the Go schema (column
+// renames, joins, deduplication). Placeholders {column} are resolved
+// at runtime: expanded to "e.column" if the column exists in the
+// source table, or "NULL AS column" otherwise.
+var customQueries = map[string]string{
 	// Django auth_user has is_staff (dropped) and is_superuser (renamed
 	// to is_admin). Profile columns are merged from patchwork_userprofile.
-	"auth_user:django": `SELECT u.id, u.username, u.password,
+	"auth_user": `SELECT u.id, u.username, u.password,
 		u.first_name, u.last_name, u.email,
 		u.is_superuser AS is_admin, u.is_active,
 		u.date_joined, u.last_login,
@@ -106,13 +143,13 @@ var columnTransforms = map[string]string{
 		LEFT JOIN patchwork_userprofile p ON p.user_id = u.id`,
 	// Django project_maintainer goes through userprofile; resolve to
 	// user_id directly.
-	"patchwork_userprofile_maintainer_projects:django": `SELECT m.id,
+	"patchwork_userprofile_maintainer_projects": `SELECT m.id,
 		up.user_id, m.project_id
 		FROM patchwork_userprofile_maintainer_projects m
 		JOIN patchwork_userprofile up ON up.id = m.userprofile_id`,
 	// Deduplicate checks: Django accumulates duplicates per
 	// (patch, context, user). Keep only the most recent.
-	"patchwork_check:django": `SELECT c.id, c.patch_id, c.user_id, c.date,
+	"patchwork_check": `SELECT c.id, c.patch_id, c.user_id, c.date,
 		c.state, c.target_url, c.context, c.description
 		FROM patchwork_check c
 		INNER JOIN (
@@ -124,12 +161,14 @@ var columnTransforms = map[string]string{
 			AND COALESCE(c.user_id, 0) = COALESCE(latest.user_id, 0)
 			AND c.date = latest.max_date`,
 	// Drop events that reference deduplicated checks.
-	"patchwork_event:django": `SELECT e.id, e.project_id, e.category, e.date,
+	"patchwork_event": `SELECT e.id, e.project_id, e.category, e.date,
 		e.actor_id, e.patch_id, e.series_id, e.cover_id,
 		e.previous_state_id, e.current_state_id,
 		e.previous_delegate_id, e.current_delegate_id,
 		e.previous_relation_id, e.current_relation_id,
-		e.created_check_id, e.cover_comment_id, e.patch_comment_id
+		e.created_check_id,
+		{cover_comment_id},
+		{patch_comment_id}
 		FROM patchwork_event e
 		WHERE e.created_check_id IS NULL
 		   OR e.created_check_id IN (
@@ -145,13 +184,89 @@ var columnTransforms = map[string]string{
 		)`,
 }
 
-func exportTableRows(ctx context.Context, database *bun.DB, w io.Writer, srcTable, dstTable string, isDjango bool) error {
-	query := "SELECT * FROM " + srcTable
-	if isDjango {
-		if q, ok := columnTransforms[srcTable+":django"]; ok {
-			query = q
+func buildQuery(ctx context.Context, database *bun.DB, srcTable, dstTable string) string {
+	if q, ok := customQueries[srcTable]; ok {
+		return resolveTemplateCols(ctx, database, srcTable, q)
+	}
+
+	expected, ok := dstColumns[dstTable]
+	if !ok {
+		return "SELECT * FROM " + srcTable
+	}
+
+	srcCols := probeColumns(ctx, database, srcTable)
+	if len(srcCols) == 0 {
+		return "SELECT * FROM " + srcTable
+	}
+
+	var selects []string
+	for _, col := range expected {
+		if srcCols[col] {
+			selects = append(selects, col)
+		} else {
+			selects = append(selects, columnDefault(col)+" AS "+col)
 		}
 	}
+	return "SELECT " + strings.Join(selects, ", ") + " FROM " + srcTable
+}
+
+// resolveTemplateCols replaces {column} placeholders in a query. If the
+// column exists in the source table, it expands to "e.column". If not,
+// it expands to "NULL AS column".
+func resolveTemplateCols(ctx context.Context, database *bun.DB, srcTable string, query string) string {
+	srcCols := probeColumns(ctx, database, srcTable)
+
+	result := query
+	for {
+		start := strings.Index(result, "{")
+		if start < 0 {
+			break
+		}
+		end := strings.Index(result[start:], "}")
+		if end < 0 {
+			break
+		}
+		col := result[start+1 : start+end]
+		var replacement string
+		if srcCols[col] {
+			replacement = "e." + col
+		} else {
+			replacement = "NULL AS " + col
+		}
+		result = result[:start] + replacement + result[start+end+1:]
+	}
+	return result
+}
+
+func probeColumns(ctx context.Context, database *bun.DB, table string) map[string]bool {
+	rows, err := database.QueryContext(ctx, "SELECT * FROM "+table+" LIMIT 0")
+	if err != nil {
+		return nil
+	}
+	defer rows.Close()
+
+	cols, err := rows.Columns()
+	if err != nil {
+		return nil
+	}
+	m := make(map[string]bool, len(cols))
+	for _, c := range cols {
+		m[c] = true
+	}
+	return m
+}
+
+func columnDefault(col string) string {
+	switch col {
+	case "show_dependencies", "auto_supersede":
+		return "false"
+	default:
+		return "NULL"
+	}
+}
+
+func exportTableRows(ctx context.Context, database *bun.DB, w io.Writer, srcTable, dstTable string) error {
+	query := buildQuery(ctx, database, srcTable, dstTable)
 
 	rows, err := database.QueryContext(ctx, query)
 	if err != nil {
@@ -200,12 +315,12 @@ func exportTableRows(ctx context.Context, database *bun.DB, w io.Writer, srcTabl
 func formatValues(vals []any) string {
 	parts := make([]string, len(vals))
 	for i, v := range vals {
-		parts[i] = formatValue(v)
+		parts[i] = formatSQLValue(v)
 	}
 	return strings.Join(parts, ", ")
 }
 
-func formatValue(v any) string {
+func formatSQLValue(v any) string {
 	if v == nil {
 		return "NULL"
 	}
