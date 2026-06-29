@@ -53,6 +53,7 @@ license_exclude = ':!:*.md' ':!:*.asc' ':!:*.yaml' ':!:docs/requirements.txt' ':
 
 .PHONY: test
 test:
+	$(GO) generate ./...
 	$(GO) test ./...
 
 .PHONY: lint
