@@ -52,7 +52,16 @@ docs:
 		$(PYTHON) -m venv docs/.venv && \
 		docs/.venv/bin/pip install -q -r docs/requirements.txt; \
 	fi
-	docs/.venv/bin/sphinx-build -b html docs docs/_build
+	docs/.venv/bin/sphinx-build --builder html --isolated \
+		-Dextensions=reno.sphinxext \
+		-Dproject=Patchwork \
+		-Dcopyright="The Patchwork Contributors" \
+		-Dauthor="The Patchwork Contributors" \
+		-Dversion="$(PATCHWORK_VERSION)" \
+		-Drelease="$(PATCHWORK_VERSION)" \
+		-Dexclude_patterns=_build,.venv \
+		-Dhtml_theme=sphinx_rtd_theme \
+		docs docs/_build
 
 import_reviser ?= github.com/incu6us/goimports-reviser/v3@v3.12.6
 import_reviser_flags ?= -rm-unused -project-name github.com/getpatchwork/patchwork
