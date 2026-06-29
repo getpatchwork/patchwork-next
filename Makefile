@@ -3,7 +3,7 @@
 #
 # SPDX-License-Identifier: GPL-2.0-or-later
 
-PATCHWORK_VERSION ?= $(shell git describe --long --abbrev=8 --dirty 2>/dev/null || echo v4.0.rc0)
+PATCHWORK_VERSION ?= $(shell git describe --long --abbrev=8 --dirty 2>/dev/null || echo v4.0.0-rc1)
 
 GO ?= go
 V ?= 0
