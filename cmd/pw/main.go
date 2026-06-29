@@ -7,6 +7,7 @@ package main
 
 import (
 	"context"
+	"os"
 
 	"github.com/getpatchwork/patchwork/cmd/pw/admin"
 	pwdb "github.com/getpatchwork/patchwork/cmd/pw/db"
@@ -21,6 +22,7 @@ import (
 type CLI struct {
 	config.Config
 
+	GenCfg  struct{}    `cmd:"" name:"config" help:"Print default configuration to stdout."`
 	Admin   admin.CLI   `cmd:"" help:"Administration CLI."`
 	DB      pwdb.CLI    `cmd:"" name:"db" help:"Database management."`
 	Ingress ingress.CLI `cmd:"" help:"Ingress SMTP/LMTP daemon."`
@@ -31,6 +33,11 @@ func main() {
 	var cli CLI
 
 	k := config.Parse(&cli, "Patchwork runtime commands.")
+
+	if k.Command() == "config" {
+		k.FatalIfErrorf(config.Generate(&cli.Config, os.Stdout))
+		return
+	}
 
 	if cli.Syslog {
 		log.InitSyslog()
