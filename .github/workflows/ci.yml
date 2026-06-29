@@ -1,0 +1,59 @@
+# Patchwork - automated patch tracking system
+# Copyright (C) The Patchwork Contributors (see CONTRIBUTORS)
+#
+# SPDX-License-Identifier: GPL-2.0-or-later
+
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+      - run: make
+
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+      - run: make test
+
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.x"
+      - run: pip install codespell
+      - run: make lint
+
+  commits:
+    runs-on: ubuntu-latest
+    if: github.event.pull_request.commits
+    env:
+      REVISION_RANGE: "HEAD~${{ github.event.pull_request.commits }}.."
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          ref: ${{ github.event.pull_request.head.sha }}
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.x"
+      - run: pip install codespell
+      - run: make check-patches
