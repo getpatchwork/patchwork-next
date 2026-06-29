@@ -22,6 +22,18 @@ pw: $(src)
 	$(GO) generate ./...
 	$(GO) build -trimpath -o pw ./cmd/pw
 
+prefix ?= /usr
+sysconfdir ?= /etc
+unitdir ?= /usr/lib/systemd/system
+
+.PHONY: install
+install: pw
+	install -Dm755 pw $(DESTDIR)$(prefix)/bin/pw
+	install -Dm644 etc/pw-http.service $(DESTDIR)$(unitdir)/pw-http.service
+	install -Dm644 etc/pw-ingress.service $(DESTDIR)$(unitdir)/pw-ingress.service
+	install -Dm644 etc/nginx.conf $(DESTDIR)$(sysconfdir)/nginx/conf.d/patchwork.conf
+	$(DESTDIR)$(prefix)/bin/pw config > $(DESTDIR)$(sysconfdir)/patchwork.toml
+
 import_reviser ?= github.com/incu6us/goimports-reviser/v3@v3.12.6
 import_reviser_flags ?= -rm-unused -project-name github.com/getpatchwork/patchwork
 gofumpt ?= mvdan.cc/gofumpt@v0.9.2
