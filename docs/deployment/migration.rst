@@ -7,15 +7,30 @@ Migrating from Django to Go
 ===========================
 
 This guide walks through migrating an existing Django-based Patchwork
-installation (3.x or earlier) to Patchwork 4.0.
+installation to Patchwork 4.0.
+
+.. important::
+
+   The export tool requires a **patchwork 3.x** database schema or later (Django
+   migration 0042+). If you are running an older version, upgrade your Django
+   installation to the latest 3.x first, then proceed with the migration.
 
 
 Overview
 --------
 
-Patchwork 4.0 is a complete rewrite in Go. The database schema is compatible
-but the deployment model is fundamentally different: a single ``pw`` binary
-replaces Django, gunicorn/uwsgi, virtualenvs, and management commands.
+Patchwork 4.0 is a complete rewrite in Go. The deployment model is fundamentally
+different: a single ``pw`` binary replaces Django, gunicorn/uwsgi, virtualenvs,
+and management commands.
+
+The database schema is similar but not identical, which is why data must be
+exported and re-imported rather than used in place.
+
+All 3.x schema variations are handled automatically (missing columns in older
+releases get sensible defaults, and tables added after 3.2 are skipped if
+absent). Databases with non-standard customizations (extra columns or additional
+tables) should also work (to some extent): the export procedure only reads known
+columns and silently ignores everything else.
 
 
 Command Mapping
