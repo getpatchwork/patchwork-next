@@ -1,0 +1,23 @@
+# Patchwork - automated patch tracking system
+# Copyright (C) The Patchwork Contributors (see CONTRIBUTORS)
+#
+# SPDX-License-Identifier: GPL-2.0-or-later
+
+[Unit]
+Description=Patchwork HTTP server
+After=network.target postgresql.service
+Documentation=https://patchwork.readthedocs.io/
+
+[Service]
+Type=simple
+ExecStart=/usr/bin/pw http
+Restart=on-failure
+RestartSec=5
+DynamicUser=yes
+StateDirectory=patchwork
+ProtectSystem=strict
+ProtectHome=yes
+NoNewPrivileges=yes
+
+[Install]
+WantedBy=multi-user.target
