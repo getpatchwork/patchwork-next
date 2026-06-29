@@ -3,4 +3,9 @@
 [codespell]
 quiet-level = 35
 ignore-regex = ([\w'".-]+\s+)*<[\w+.=~/-]+@[a-z0-9.-]*[a-z0-9]>
-skip = pkg/mail/testdata
+skip =
+	pkg/mail/testdata,
+	docs/_build,
+	docs/.venv,
+	*_templ.go,
+	pw,
