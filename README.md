@@ -51,4 +51,4 @@ The web interface is now available at http://127.0.0.1:8080 and the SMTP
 ingress daemon listens on 127.0.0.1:2525.
 
 For production deployment with systemd, nginx and Postfix, see the
-[deployment guide](docs/deployment/installation.rst).
+[full documentation](https://getpatchwork.github.io/patchwork-next/).

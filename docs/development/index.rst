@@ -3,14 +3,10 @@
 ..
 .. SPDX-License-Identifier: GPL-2.0-or-later
 
-Patchwork -- |release|
-======================
+Development
+===========
 
 .. toctree::
    :maxdepth: 2
 
-   usage/index
-   deployment/index
-   api/index
-   development/index
-   releases/index
+   contributing
