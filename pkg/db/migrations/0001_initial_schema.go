@@ -23,7 +23,7 @@ func init() {
 
 type user0001 struct {
 	bun.BaseModel `bun:"table:auth_user"`
-	ID            int        `bun:"id,pk"`
+	ID            int        `bun:"id,pk,autoincrement"`
 	Username      string     `bun:"username,notnull"`
 	Password      string     `bun:"password,notnull"`
 	FirstName     string     `bun:"first_name,notnull"`
