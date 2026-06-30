@@ -58,15 +58,7 @@ func version() string {
 	return Version
 }
 
-type VersionFlag string
-
-func (v VersionFlag) Decode(_ *kong.DecodeContext) error {
-	return nil
-}
-
-func (v VersionFlag) IsBool() bool {
-	return true
-}
+type VersionFlag bool
 
 func (v VersionFlag) BeforeReset(app *kong.Kong, vars kong.Vars) error {
 	fmt.Printf("patchwork %s (%s %s %s %s)\n",
