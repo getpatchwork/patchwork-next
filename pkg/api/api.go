@@ -224,7 +224,7 @@ func NewRouter(cfg *config.Config, database *bun.DB, baseURL string, bus db.Even
 
 	latest := supportedVersions[len(supportedVersions)-1]
 	latestPrefix := fmt.Sprintf("/api/%d.%d", latest.Major, latest.Minor)
-	r.HandleFunc("/api/*", func(w http.ResponseWriter, r *http.Request) {
+	r.Get("/api/*", func(w http.ResponseWriter, r *http.Request) {
 		rest := strings.TrimPrefix(r.URL.Path, "/api")
 		http.Redirect(w, r, latestPrefix+rest, http.StatusMovedPermanently)
 	})
