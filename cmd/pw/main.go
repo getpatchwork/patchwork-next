@@ -9,7 +9,6 @@ import (
 	"context"
 	"fmt"
 	"os"
-	"regexp"
 	"runtime"
 
 	"github.com/alecthomas/kong"
@@ -42,27 +41,11 @@ var (
 	Date    string
 )
 
-func version() string {
-	re := regexp.MustCompile(`^v(.+)-(\d+)-g([0-9a-f]+)(-dirty)?$`)
-	m := re.FindStringSubmatch(Version)
-	if m != nil {
-		v := m[1]
-		if m[2] != "" && m[2] != "0" && m[3] != "" {
-			v += fmt.Sprintf("+%s+git+%s", m[2], m[3])
-		}
-		if m[4] != "" {
-			v += "+dirty"
-		}
-		return v
-	}
-	return Version
-}
-
 type VersionFlag bool
 
 func (v VersionFlag) BeforeReset(app *kong.Kong, vars kong.Vars) error {
 	fmt.Printf("patchwork %s (%s %s %s %s)\n",
-		version(), runtime.Version(), runtime.GOARCH, runtime.GOOS, Date)
+		Version, runtime.Version(), runtime.GOARCH, runtime.GOOS, Date)
 	app.Exit(0)
 	return nil
 }
@@ -92,6 +75,6 @@ func main() {
 		Context: context.Background(),
 		Config:  &cli.Config,
 		DB:      database,
-		Version: version(),
+		Version: Version,
 	}))
 }
