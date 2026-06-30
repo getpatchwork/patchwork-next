@@ -42,6 +42,22 @@ var (
 	Date    string
 )
 
+func version() string {
+	re := regexp.MustCompile(`^v(.+)-(\d+)-g([0-9a-f]+)(-dirty)?$`)
+	m := re.FindStringSubmatch(Version)
+	if m != nil {
+		v := m[1]
+		if m[2] != "" && m[2] != "0" && m[3] != "" {
+			v += fmt.Sprintf("+%s+git+%s", m[2], m[3])
+		}
+		if m[4] != "" {
+			v += "+dirty"
+		}
+		return v
+	}
+	return Version
+}
+
 type VersionFlag string
 
 func (v VersionFlag) Decode(_ *kong.DecodeContext) error {
@@ -53,19 +69,8 @@ func (v VersionFlag) IsBool() bool {
 }
 
 func (v VersionFlag) BeforeReset(app *kong.Kong, vars kong.Vars) error {
-	re := regexp.MustCompile(`^v(.+)-(\d+)-g([0-9a-f]+)(-dirty)?$`)
-	m := re.FindStringSubmatch(Version)
-	if m != nil {
-		Version = m[1]
-		if m[2] != "" && m[2] != "0" && m[3] != "" {
-			Version += fmt.Sprintf("+%s+git+%s", m[2], m[3])
-		}
-		if m[4] != "" {
-			Version += "+dirty"
-		}
-	}
 	fmt.Printf("patchwork %s (%s %s %s %s)\n",
-		Version, runtime.Version(), runtime.GOARCH, runtime.GOOS, Date)
+		version(), runtime.Version(), runtime.GOARCH, runtime.GOOS, Date)
 	app.Exit(0)
 	return nil
 }
@@ -93,5 +98,6 @@ func main() {
 		Context: context.Background(),
 		Config:  &cli.Config,
 		DB:      database,
+		Version: version(),
 	}))
 }

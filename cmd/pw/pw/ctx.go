@@ -16,8 +16,9 @@ import (
 type Context struct {
 	context.Context
 
-	Config *config.Config
-	DB     *bun.DB
+	Config  *config.Config
+	DB      *bun.DB
+	Version string
 }
 
 func (c *Context) Value(key any) any {

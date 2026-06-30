@@ -96,7 +96,7 @@ func (c *CLI) Run(ctx *pw.Context) error {
 	signal.Notify(done, syscall.SIGINT, syscall.SIGTERM)
 
 	go func() {
-		log.Noticef("listening on %s", sock.Addr())
+		log.Noticef("patchwork %s listening on smtp://%s", ctx.Version, sock.Addr())
 		if e := srv.Serve(sock); e != nil && !errors.Is(e, net.ErrClosed) {
 			err = fmt.Errorf("serve: %w", e)
 			done <- syscall.SIGCHLD
