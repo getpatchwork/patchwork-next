@@ -82,6 +82,7 @@ func (c *CLI) Run(ctx *pw.Context) error {
 	}
 
 	be := &backend{
+		ctx:      ctx.Context,
 		database: ctx.DB,
 		cfg:      ctx.Config,
 		listID:   c.ListID,
@@ -141,6 +142,7 @@ func startSMTPServer(cfg *config.Config, be smtp.Backend) (net.Listener, *smtp.S
 }
 
 type backend struct {
+	ctx      context.Context
 	database *bun.DB
 	cfg      *config.Config
 	listID   string
@@ -223,7 +225,7 @@ func (s *session) Data(r io.Reader) error {
 		entity.Header.Get("Subject"))
 
 	err = mail.ParseMail(
-		context.Background(), s.backend.database,
+		s.backend.ctx, s.backend.database,
 		bytes.NewReader(data), s.backend.listID,
 	)
 	if err != nil {
