@@ -44,7 +44,6 @@ install: pw
 	install -Dm644 etc/pw-http.service $(DESTDIR)$(unitdir)/pw-http.service
 	install -Dm644 etc/pw-ingress.service $(DESTDIR)$(unitdir)/pw-ingress.service
 	install -Dm644 etc/pw.bash-completion $(DESTDIR)$(datadir)/bash-completion/completions/pw
-	$(DESTDIR)$(prefix)/bin/pw config > $(DESTDIR)$(sysconfdir)/patchwork.toml
 
 .PHONY: uninstall
 uninstall:
@@ -52,7 +51,6 @@ uninstall:
 	rm -f $(DESTDIR)$(unitdir)/pw-http.service
 	rm -f $(DESTDIR)$(unitdir)/pw-ingress.service
 	rm -f $(DESTDIR)$(datadir)/bash-completion/completions/pw
-	rm -f $(DESTDIR)$(sysconfdir)/patchwork.toml
 
 PYTHON ?= python3
 
