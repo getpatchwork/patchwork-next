@@ -37,7 +37,7 @@ func (c *CLI) Run(ctx *pw.Context) error {
 	bus := events.Start(ctx, ctx.DB)
 	defer bus.Shutdown()
 
-	router := web.NewRouter(ctx.Config, ctx.DB, bus)
+	router := web.NewRouter(ctx.Config, ctx.DB, bus, ctx.Version)
 	router.Mount("/", api.NewRouter(ctx.Config, ctx.DB, ctx.Config.Http.BaseURL, bus))
 
 	srv := &http.Server{

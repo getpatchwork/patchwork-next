@@ -30,7 +30,7 @@ import (
 //go:embed static/*
 var staticFS embed.FS
 
-func NewRouter(cfg *config.Config, database *bun.DB, bus db.EventBus) chi.Router {
+func NewRouter(cfg *config.Config, database *bun.DB, bus db.EventBus, version string) chi.Router {
 	r := chi.NewRouter()
 	r.Use(middleware.Recoverer)
 	r.Use(middleware.StripSlashes)
@@ -40,7 +40,7 @@ func NewRouter(cfg *config.Config, database *bun.DB, bus db.EventBus) chi.Router
 	if _, err := rand.Read(csrfKey); err != nil {
 		panic("generate CSRF key: " + err.Error())
 	}
-	h := &webHandler{cfg: cfg, db: database, csrfKey: csrfKey}
+	h := &webHandler{cfg: cfg, db: database, csrfKey: csrfKey, version: version}
 	r.Use(h.sessionMiddleware)
 
 	sub, _ := fs.Sub(staticFS, "static")
@@ -108,6 +108,7 @@ type webHandler struct {
 	cfg     *config.Config
 	db      *bun.DB
 	csrfKey []byte
+	version string
 }
 
 func intStr(n int) string {
@@ -261,6 +262,7 @@ func (h *webHandler) pageCtx(r *http.Request) pageContext {
 	return pageContext{
 		User:      getWebUser(r),
 		CSRFToken: h.csrfToken(r),
+		Version:   h.version,
 	}
 }
 

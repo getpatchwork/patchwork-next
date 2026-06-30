@@ -15,6 +15,7 @@ type breadcrumb struct {
 type pageContext struct {
 	User      *db.User
 	CSRFToken string
+	Version   string
 }
 
 templ layout(title string, crumbs []breadcrumb, pc pageContext) {
@@ -60,7 +61,7 @@ templ layout(title string, crumbs []breadcrumb, pc pageContext) {
 				{ children... }
 			</main>
 			<footer>
-				Patchwork
+				Patchwork { pc.Version } | <a href="/api/docs">API</a>
 			</footer>
 		</body>
 	</html>
