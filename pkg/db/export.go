@@ -36,11 +36,11 @@ var exportTables = []exportTable{
 	{dstName: "delegation_rule", srcName: "patchwork_delegationrule"},
 	{dstName: "person", srcName: "patchwork_person"},
 	{dstName: "patch_relation", srcName: "patchwork_patchrelation"},
+	{dstName: "cover", srcName: "patchwork_cover"},
 	{dstName: "series", srcName: "patchwork_series"},
 	{dstName: "series_reference", srcName: "patchwork_seriesreference"},
 	{dstName: "series_metadata", srcName: "patchwork_seriesmetadata", optional: true},
 	{dstName: "series_dependencies", srcName: "patchwork_series_dependencies", optional: true},
-	{dstName: "cover", srcName: "patchwork_cover"},
 	{dstName: "patch", srcName: "patchwork_patch"},
 	{dstName: "patch_tag", srcName: "patchwork_patchtag"},
 	{dstName: "patch_comment", srcName: "patchwork_patchcomment"},
@@ -65,6 +65,11 @@ func Export(ctx context.Context, database *bun.DB, w io.Writer) error {
 	}
 
 	fmt.Fprint(w, "BEGIN;\n")
+
+	// Clear seeded data so the imported rows don't conflict with
+	// defaults inserted by "pw db sync".
+	fmt.Fprint(w, "DELETE FROM tag;\n")
+	fmt.Fprint(w, "DELETE FROM state;\n")
 
 	for _, t := range exportTables {
 		if t.optional && !tableExists(ctx, database, t.srcName) {
@@ -327,9 +332,9 @@ func formatSQLValue(v any) string {
 	switch val := v.(type) {
 	case bool:
 		if val {
-			return "1"
+			return "true"
 		}
-		return "0"
+		return "false"
 	case int64:
 		return fmt.Sprintf("%d", val)
 	case float64:
@@ -360,9 +365,9 @@ func formatSQLValue(v any) string {
 			return "NULL"
 		}
 		if val.Bool {
-			return "1"
+			return "true"
 		}
-		return "0"
+		return "false"
 	case sql.NullTime:
 		if !val.Valid {
 			return "NULL"

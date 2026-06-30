@@ -12,6 +12,8 @@ import (
 	"strings"
 
 	"github.com/uptrace/bun"
+
+	"github.com/getpatchwork/patchwork/pkg/log"
 )
 
 // Schema is declared from struct tags:
@@ -161,11 +163,11 @@ func CreateSchema(ctx context.Context, database bun.IDB) error {
 		(*DelegationRule)(nil),
 		(*Person)(nil),
 		(*PatchRelation)(nil),
+		(*Cover)(nil),
 		(*Series)(nil),
 		(*SeriesReference)(nil),
 		(*SeriesMetadata)(nil),
 		(*SeriesDependencies)(nil),
-		(*Cover)(nil),
 		(*Patch)(nil),
 		(*PatchTag)(nil),
 		(*PatchComment)(nil),
@@ -188,6 +190,7 @@ func CreateSchemaFrom(ctx context.Context, database bun.IDB, schema []any) error
 		for _, fk := range fks {
 			fk.add(q)
 		}
+		log.Noticef("creating table %q", q.GetTableName())
 		if _, err := q.Exec(ctx); err != nil {
 			return fmt.Errorf("create table %s: %w", q.GetTableName(), err)
 		}
