@@ -99,8 +99,24 @@ func bashComplete(app *kong.Kong) bool {
 
 	// complete flag values if we are positioned after a value-taking flag
 	if prevFlag != nil && !prevFlag.IsBool() && !prevFlag.IsCounter() {
-		for _, v := range flagValueHints(prevFlag) {
-			add(v, "")
+		hints, csv := flagValueHints(prevFlag)
+		if csv && strings.Contains(prefix, ",") {
+			lastComma := strings.LastIndex(prefix, ",")
+			tail := prefix[lastComma+1:]
+			chosen := make(map[string]bool)
+			for _, v := range strings.Split(prefix[:lastComma], ",") {
+				chosen[v] = true
+			}
+			prefix = tail
+			for _, v := range hints {
+				if !chosen[v] {
+					add(v, "")
+				}
+			}
+		} else {
+			for _, v := range hints {
+				add(v, "")
+			}
 		}
 		goto print
 	}
@@ -150,14 +166,24 @@ print:
 	return true
 }
 
-func flagValueHints(flag *kong.Flag) []string {
+var hintProviders = map[string][]string{}
+
+func RegisterHints(name string, values []string) {
+	hintProviders[name] = values
+}
+
+func flagValueHints(flag *kong.Flag) (hints []string, csv bool) {
 	if flag.Enum != "" {
-		return strings.Split(flag.Enum, ",")
+		return strings.Split(flag.Enum, ","), false
 	}
-	if c := flag.Tag.Get("completion"); c != "" {
-		return strings.Split(c, ",")
+	c := flag.Tag.Get("completion")
+	if c == "" {
+		return nil, false
 	}
-	return nil
+	if name, ok := strings.CutPrefix(c, "csv:"); ok {
+		return hintProviders[name], true
+	}
+	return strings.Split(c, ","), false
 }
 
 func findFlag(node *kong.Node, name string) *kong.Flag {
