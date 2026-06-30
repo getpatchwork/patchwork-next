@@ -9,7 +9,6 @@ import (
 	"context"
 	"fmt"
 	"net/http"
-	"strings"
 	"time"
 
 	"github.com/danielgtaylor/huma/v2"
@@ -45,21 +44,6 @@ func registerWebhookRoutes(api huma.API, h *handler, prefix string, mw huma.Midd
 		DefaultStatus: 204,
 		Middlewares:   mw,
 	}, h.DeleteWebhook)
-}
-
-var validEventCategories = map[string]bool{
-	"cover-created":          true,
-	"patch-created":          true,
-	"patch-completed":        true,
-	"patch-state-changed":    true,
-	"patch-delegated":        true,
-	"patch-relation-changed": true,
-	"check-created":          true,
-	"check-updated":          true,
-	"series-created":         true,
-	"series-completed":       true,
-	"cover-comment-created":  true,
-	"patch-comment-created":  true,
 }
 
 type ListWebhooksInput struct {
@@ -155,12 +139,8 @@ func (h *handler) CreateWebhook(
 	if events == "" {
 		events = "*"
 	}
-	if events != "*" {
-		for _, e := range strings.Split(events, ",") {
-			if !validEventCategories[strings.TrimSpace(e)] {
-				return nil, huma.Error400BadRequest("Invalid event category.")
-			}
-		}
+	if err := db.ValidateEvents(events); err != nil {
+		return nil, huma.Error400BadRequest("Invalid event category.")
 	}
 
 	active := true
