@@ -78,6 +78,8 @@ func (v VersionFlag) BeforeReset(app *kong.Kong, vars kong.Vars) error {
 func main() {
 	var cli CLI
 
+	config.RegisterHints("events", admin.EventCategories())
+
 	k := config.Parse(&cli, "Patchwork runtime commands.")
 
 	if k.Command() == "config" {
