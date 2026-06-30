@@ -128,6 +128,12 @@ func bashComplete(app *kong.Kong) bool {
 				continue
 			}
 			add(long, flag.Help)
+			if flag.Tag.Negatable != "" {
+				neg := "--no-" + flag.Name
+				if !seen[neg] {
+					add(neg, flag.Help)
+				}
+			}
 		}
 	}
 
