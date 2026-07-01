@@ -20,21 +20,25 @@ func registerUserRoutes(api huma.API, h *handler, prefix string, mw huma.Middlew
 	huma.Register(api, huma.Operation{
 		Method: http.MethodGet, Path: prefix + "/users",
 		OperationID: fmt.Sprintf("list-users-v%s", prefix[5:]),
+		Security:    authRequired,
 		Middlewares: mw,
 	}, h.ListUsers)
 	huma.Register(api, huma.Operation{
 		Method: http.MethodGet, Path: prefix + "/users/{id}",
 		OperationID: fmt.Sprintf("get-user-v%s", prefix[5:]),
+		Security:    authRequired,
 		Middlewares: mw,
 	}, h.GetUserDetail)
 	huma.Register(api, huma.Operation{
 		Method: http.MethodPatch, Path: prefix + "/users/{id}",
 		OperationID: fmt.Sprintf("update-user-v%s", prefix[5:]),
+		Security:    authRequired,
 		Middlewares: mw,
 	}, h.UpdateUser)
 	huma.Register(api, huma.Operation{
 		Method: http.MethodPut, Path: prefix + "/users/{id}",
 		OperationID: fmt.Sprintf("put-user-v%s", prefix[5:]),
+		Security:    authRequired,
 		Middlewares: mw,
 	}, h.UpdateUser)
 }

@@ -122,16 +122,19 @@ a ``Content-Type`` of ``application/json``:
 Authentication
 --------------
 
-Patchwork supports authentication using basic authentication (username and
-password) or token authentication (recommended).
+Patchwork supports authentication using bearer token authentication. To
+authenticate, first generate a token from your user profile page, then::
 
-To authenticate with a token, first obtain one from your profile page, then::
+    $ curl -H "Authorization: Bearer ${token}" \
+        'https://patchwork.example.com/api/'
+
+The legacy ``Token`` scheme is also accepted for backward compatibility::
 
     $ curl -H "Authorization: Token ${token}" \
         'https://patchwork.example.com/api/'
 
 Not all resources require authentication. Those that do will return
-``404 (Not Found)`` if authentication is not provided.
+``401 (Unauthorized)`` if authentication is not provided.
 
 Pagination
 ----------

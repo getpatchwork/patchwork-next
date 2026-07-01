@@ -45,11 +45,13 @@ func registerCheckRoutes(api huma.API, h *handler, prefix string, mw huma.Middle
 		Method: http.MethodPost, Path: prefix + "/patches/{patch_id}/checks",
 		OperationID:   fmt.Sprintf("create-check-v%s", prefix[5:]),
 		DefaultStatus: 201,
+		Security:      authRequired,
 		Middlewares:   mw,
 	}, h.CreateCheck)
 	huma.Register(api, huma.Operation{
 		Method: http.MethodPatch, Path: prefix + "/patches/{patch_id}/checks/{check_id}",
 		OperationID: fmt.Sprintf("update-check-v%s", prefix[5:]),
+		Security:    authRequired,
 		Middlewares: mw,
 	}, h.UpdateCheck)
 }

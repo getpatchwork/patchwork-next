@@ -20,28 +20,33 @@ func registerWebhookRoutes(api huma.API, h *handler, prefix string, mw huma.Midd
 	huma.Register(api, huma.Operation{
 		Method: http.MethodGet, Path: prefix + "/projects/{projectID}/webhooks",
 		OperationID: fmt.Sprintf("list-webhooks-v%s", prefix[5:]),
+		Security:    authRequired,
 		Middlewares: mw,
 	}, h.ListWebhooks)
 	huma.Register(api, huma.Operation{
 		Method: http.MethodGet, Path: prefix + "/projects/{projectID}/webhooks/{webhookID}",
 		OperationID: fmt.Sprintf("get-webhook-v%s", prefix[5:]),
+		Security:    authRequired,
 		Middlewares: mw,
 	}, h.GetWebhook)
 	huma.Register(api, huma.Operation{
 		Method: http.MethodPost, Path: prefix + "/projects/{projectID}/webhooks",
 		OperationID:   fmt.Sprintf("create-webhook-v%s", prefix[5:]),
 		DefaultStatus: 201,
+		Security:      authRequired,
 		Middlewares:   mw,
 	}, h.CreateWebhook)
 	huma.Register(api, huma.Operation{
 		Method: http.MethodPatch, Path: prefix + "/projects/{projectID}/webhooks/{webhookID}",
 		OperationID: fmt.Sprintf("update-webhook-v%s", prefix[5:]),
+		Security:    authRequired,
 		Middlewares: mw,
 	}, h.UpdateWebhook)
 	huma.Register(api, huma.Operation{
 		Method: http.MethodDelete, Path: prefix + "/projects/{projectID}/webhooks/{webhookID}",
 		OperationID:   fmt.Sprintf("delete-webhook-v%s", prefix[5:]),
 		DefaultStatus: 204,
+		Security:      authRequired,
 		Middlewares:   mw,
 	}, h.DeleteWebhook)
 }

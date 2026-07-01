@@ -31,6 +31,7 @@ func registerSeriesRoutes(api huma.API, h *handler, prefix string, mw huma.Middl
 	huma.Register(api, huma.Operation{
 		Method: http.MethodPatch, Path: prefix + "/series/{id}",
 		OperationID: fmt.Sprintf("update-series-v%s", prefix[5:]),
+		Security:    authRequired,
 		Middlewares: mw,
 	}, h.UpdateSeries)
 }

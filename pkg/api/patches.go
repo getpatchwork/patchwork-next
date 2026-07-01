@@ -33,11 +33,13 @@ func registerPatchRoutes(api huma.API, h *handler, prefix string, mw huma.Middle
 	huma.Register(api, huma.Operation{
 		Method: http.MethodPatch, Path: prefix + "/patches/{id}",
 		OperationID: fmt.Sprintf("update-patch-v%s", prefix[5:]),
+		Security:    authRequired,
 		Middlewares: mw,
 	}, h.UpdatePatch)
 	huma.Register(api, huma.Operation{
 		Method: http.MethodPut, Path: prefix + "/patches/{id}",
 		OperationID: fmt.Sprintf("put-patch-v%s", prefix[5:]),
+		Security:    authRequired,
 		Middlewares: mw,
 	}, h.UpdatePatch)
 }

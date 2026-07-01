@@ -30,11 +30,13 @@ func registerProjectRoutes(api huma.API, h *handler, prefix string, mw huma.Midd
 	huma.Register(api, huma.Operation{
 		Method: http.MethodPatch, Path: prefix + "/projects/{id}",
 		OperationID: fmt.Sprintf("update-project-v%s", prefix[5:]),
+		Security:    authRequired,
 		Middlewares: mw,
 	}, h.UpdateProject)
 	huma.Register(api, huma.Operation{
 		Method: http.MethodPut, Path: prefix + "/projects/{id}",
 		OperationID: fmt.Sprintf("put-project-v%s", prefix[5:]),
+		Security:    authRequired,
 		Middlewares: mw,
 	}, h.UpdateProject)
 }

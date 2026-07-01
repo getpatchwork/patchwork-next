@@ -19,7 +19,8 @@ func authMiddleware(database *bun.DB) func(http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			auth := r.Header.Get("Authorization")
 			scheme, token, _ := strings.Cut(auth, " ")
-			if strings.EqualFold(scheme, "token") {
+			if strings.EqualFold(scheme, "bearer") ||
+				strings.EqualFold(scheme, "token") {
 				token = strings.TrimSpace(token)
 				q := db.GetQueries(r.Context())
 				user, err := q.GetUserByToken(token)

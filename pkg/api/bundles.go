@@ -32,22 +32,26 @@ func registerBundleRoutes(api huma.API, h *handler, prefix string, mw huma.Middl
 		Method: http.MethodPost, Path: prefix + "/bundles",
 		OperationID:   fmt.Sprintf("create-bundle-v%s", prefix[5:]),
 		DefaultStatus: 201,
+		Security:      authRequired,
 		Middlewares:   mw,
 	}, h.CreateBundle)
 	huma.Register(api, huma.Operation{
 		Method: http.MethodPatch, Path: prefix + "/bundles/{id}",
 		OperationID: fmt.Sprintf("update-bundle-v%s", prefix[5:]),
+		Security:    authRequired,
 		Middlewares: mw,
 	}, h.UpdateBundle)
 	huma.Register(api, huma.Operation{
 		Method: http.MethodPut, Path: prefix + "/bundles/{id}",
 		OperationID: fmt.Sprintf("put-bundle-v%s", prefix[5:]),
+		Security:    authRequired,
 		Middlewares: mw,
 	}, h.UpdateBundle)
 	huma.Register(api, huma.Operation{
 		Method: http.MethodDelete, Path: prefix + "/bundles/{id}",
 		OperationID:   fmt.Sprintf("delete-bundle-v%s", prefix[5:]),
 		DefaultStatus: 204,
+		Security:      authRequired,
 		Middlewares:   mw,
 	}, h.DeleteBundle)
 }

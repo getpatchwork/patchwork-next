@@ -29,6 +29,7 @@ func registerCommentRoutes(api huma.API, h *handler, prefix string, mw huma.Midd
 	huma.Register(api, huma.Operation{
 		Method: http.MethodPatch, Path: prefix + "/patches/{patch_id}/comments/{comment_id}",
 		OperationID: fmt.Sprintf("update-patch-comment-v%s", prefix[5:]),
+		Security:    authRequired,
 		Middlewares: mw,
 	}, h.UpdatePatchComment)
 	huma.Register(api, huma.Operation{
@@ -44,6 +45,7 @@ func registerCommentRoutes(api huma.API, h *handler, prefix string, mw huma.Midd
 	huma.Register(api, huma.Operation{
 		Method: http.MethodPatch, Path: prefix + "/covers/{cover_id}/comments/{comment_id}",
 		OperationID: fmt.Sprintf("update-cover-comment-v%s", prefix[5:]),
+		Security:    authRequired,
 		Middlewares: mw,
 	}, h.UpdateCoverComment)
 }
