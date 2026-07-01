@@ -10,7 +10,6 @@ import (
 	"log"
 	"log/syslog"
 	"os"
-	"path"
 
 	"golang.org/x/term"
 )
@@ -33,11 +32,10 @@ func newSyslog(tag string, prio syslog.Priority) *log.Logger {
 	return log.New(w, "", log.Lshortfile)
 }
 
-func InitSyslog() {
+func InitSyslog(tag string) {
 	if term.IsTerminal(int(os.Stderr.Fd())) {
 		return
 	}
-	tag := path.Base(os.Args[0])
 	dbg = newSyslog(tag, syslog.LOG_DEBUG)
 	notice = newSyslog(tag, syslog.LOG_NOTICE)
 	info = newSyslog(tag, syslog.LOG_INFO)

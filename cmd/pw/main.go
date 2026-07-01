@@ -63,7 +63,7 @@ func main() {
 	}
 
 	if cli.Syslog {
-		log.InitSyslog()
+		log.InitSyslog("pw-" + k.Command())
 		k.Stderr = log.ErrLogger().Writer()
 	}
 
