@@ -299,7 +299,9 @@ templ patchDetailPage(d patchDetailData) {
 						}
 					</comment-header>
 					if c.Content != nil {
-						<pre>{ *c.Content }</pre>
+						<pre>
+							@templ.Raw(highlightMessage(*c.Content))
+						</pre>
 					}
 				</article>
 			}
