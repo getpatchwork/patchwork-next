@@ -15,6 +15,7 @@ import (
 	"io/fs"
 	"net/http"
 	"net/url"
+	"os"
 	"regexp"
 	"strconv"
 	"strings"
@@ -25,6 +26,7 @@ import (
 
 	"github.com/getpatchwork/patchwork/pkg/config"
 	"github.com/getpatchwork/patchwork/pkg/db"
+	"github.com/getpatchwork/patchwork/pkg/log"
 )
 
 //go:embed static/*
@@ -41,10 +43,19 @@ func NewRouter(cfg *config.Config, database *bun.DB, bus db.EventBus, version st
 		panic("generate CSRF key: " + err.Error())
 	}
 	h := &webHandler{cfg: cfg, db: database, csrfKey: csrfKey, version: version}
+	h.customCSS = readOptionalFile(cfg.Http.CustomCSS)
+	h.navHTML = readOptionalFile(cfg.Http.NavHTML)
+	h.footerHTML = readOptionalFile(cfg.Http.FooterHTML)
 	r.Use(h.sessionMiddleware)
 
 	sub, _ := fs.Sub(staticFS, "static")
 	r.Handle("/static/*", http.StripPrefix("/static/", http.FileServer(http.FS(sub))))
+	if h.customCSS != "" {
+		r.Get("/static/custom.css", func(w http.ResponseWriter, r *http.Request) {
+			w.Header().Set("Content-Type", "text/css; charset=utf-8")
+			_, _ = w.Write([]byte(h.customCSS))
+		})
+	}
 
 	r.Get("/", h.ProjectList)
 	r.Get("/project/{linkname}", h.ProjectDetail)
@@ -105,10 +116,13 @@ func NewRouter(cfg *config.Config, database *bun.DB, bus db.EventBus, version st
 }
 
 type webHandler struct {
-	cfg     *config.Config
-	db      *bun.DB
-	csrfKey []byte
-	version string
+	cfg        *config.Config
+	db         *bun.DB
+	csrfKey    []byte
+	version    string
+	customCSS  string
+	navHTML    string
+	footerHTML string
 }
 
 func intStr(n int) string {
@@ -258,11 +272,25 @@ func isURL(s string) bool {
 	return strings.HasPrefix(s, "http://") || strings.HasPrefix(s, "https://")
 }
 
+func readOptionalFile(path string) string {
+	if path == "" {
+		return ""
+	}
+	data, err := os.ReadFile(path)
+	if err != nil {
+		log.Fatalf("read %s: %s", path, err)
+	}
+	return strings.TrimSpace(string(data))
+}
+
 func (h *webHandler) pageCtx(r *http.Request) pageContext {
 	return pageContext{
-		User:      getWebUser(r),
-		CSRFToken: h.csrfToken(r),
-		Version:   h.version,
+		User:       getWebUser(r),
+		CSRFToken:  h.csrfToken(r),
+		Version:    h.version,
+		CustomCSS:  h.customCSS != "",
+		NavHTML:    h.navHTML,
+		FooterHTML: h.footerHTML,
 	}
 }
 

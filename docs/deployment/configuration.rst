@@ -48,6 +48,20 @@ Settings Reference
   The public base URL of the Patchwork instance, used for generating links in
   emails and API responses. Example: ``https://patchwork.example.com``.
 
+``custom-css``
+  Path to a custom CSS file. It is served after the built-in stylesheet,
+  allowing you to override any default styles. The file is read once at startup.
+
+``nav-html``
+  Path to an HTML file whose content is inserted in the page header, after the
+  navigation bar. Can be used to display a logo, additional links, or a banner.
+  The file is read once at startup.
+
+``footer-html``
+  Path to an HTML file whose content is inserted in the page footer. Can be used
+  for legal notices or organization-specific links. The file is read once at
+  startup.
+
 ``[ingress]``
 ~~~~~~~~~~~~~
 

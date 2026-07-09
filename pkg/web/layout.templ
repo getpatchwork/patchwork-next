@@ -13,9 +13,12 @@ type breadcrumb struct {
 }
 
 type pageContext struct {
-	User      *db.User
-	CSRFToken string
-	Version   string
+	User       *db.User
+	CSRFToken  string
+	Version    string
+	CustomCSS  bool
+	NavHTML    string
+	FooterHTML string
 }
 
 templ layout(title string, crumbs []breadcrumb, pc pageContext) {
@@ -26,6 +29,9 @@ templ layout(title string, crumbs []breadcrumb, pc pageContext) {
 			<meta name="viewport" content="width=device-width, initial-scale=1"/>
 			<title>{ title } - Patchwork</title>
 			<link rel="stylesheet" href="/static/style.css"/>
+			if pc.CustomCSS {
+				<link rel="stylesheet" href="/static/custom.css"/>
+			}
 		</head>
 		<body>
 			<header>
@@ -56,12 +62,18 @@ templ layout(title string, crumbs []breadcrumb, pc pageContext) {
 						}
 					</span>
 				</nav>
+				if pc.NavHTML != "" {
+					@templ.Raw(pc.NavHTML)
+				}
 			</header>
 			<main>
 				{ children... }
 			</main>
 			<footer>
 				Patchwork { pc.Version } | <a href="/api/docs">API</a>
+				if pc.FooterHTML != "" {
+					@templ.Raw(pc.FooterHTML)
+				}
 			</footer>
 		</body>
 	</html>
