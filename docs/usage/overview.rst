@@ -32,11 +32,13 @@ Users
 
 Users are anyone who has created an account on a given Patchwork instance.
 
+
 Standard Users
 ~~~~~~~~~~~~~~
 
 A standard user can associate multiple email addresses with their user account,
 create bundles and store TODO lists.
+
 
 Maintainers
 ~~~~~~~~~~~
@@ -59,6 +61,7 @@ Submissions
 Patchwork captures three types of mail to mailing lists: patches, cover
 letters, and replies to either patches or cover letters, a.k.a. comments. Any
 mail that does not fit one of these categories is ignored.
+
 
 Patches
 ~~~~~~~
@@ -96,12 +99,14 @@ Patch Metadata
 Patchwork allows users to store various metadata against patches. This metadata
 is only configurable by a maintainer.
 
+
 States
 ~~~~~~
 
 States track the state of patch in its lifecycle. States vary from project to
 project, but generally a minimum subset of "new", "rejected" and "accepted"
 will exist.
+
 
 Delegates
 ~~~~~~~~~
@@ -117,7 +122,6 @@ one delegate can be assigned to a patch.
    Patchwork supports automatic delegation of patches. Refer to
    :doc:`delegation` for more information.
 
-.. _overview-tags:
 
 Tags
 ~~~~
@@ -147,6 +151,8 @@ project to project and Patchwork instance to Patchwork instance. The `kernel
 project documentation`__ provides an overview of the supported tags for the
 Linux kernel project.
 
+__ https://www.kernel.org/doc/html/latest/process/submitting-patches.html
+
 Patchwork also includes support for an additional, Patchwork-specific tag for
 declaring dependencies between series. The tag may be included in the cover
 letter or any patch of a series and should reference the message ID of a patch
@@ -160,10 +166,9 @@ or a cover letter or the web URL to a patch or a series:
 
 .. note::
 
-    Series dependencies are not shown by default. This can be changed by
-    enabling the `show_dependencies` flag for each project.
+   Series dependencies are not shown by default. This can be changed by
+   enabling the `show_dependencies` flag for each project.
 
-__ https://www.kernel.org/doc/html/latest/process/submitting-patches.html
 
 Checks
 ~~~~~~
@@ -203,6 +208,7 @@ Comment Metadata
 Like patches, Patchwork allows users to store various bits of metadata against
 comments.
 
+
 Action required
 ~~~~~~~~~~~~~~~
 
@@ -226,6 +232,7 @@ Collections
 Patchwork provides a number of ways to store groups of patches. Some of these
 are automatically generated, while others are user-defined.
 
+
 Series
 ~~~~~~
 
@@ -233,6 +240,7 @@ Series are groups of patches, along with an optional cover letter. Series are
 mostly dumb containers, though they also contain some metadata themselves such
 as a version (which is inherited by the patches and cover letter) and a count
 of the number of patches found in the series.
+
 
 Bundles
 ~~~~~~~
@@ -243,6 +251,7 @@ restriction of number of patches and they don't even need to be in the same
 project. A single patch also can be part of multiple bundles at the same time.
 An example of Bundle usage would be keeping track of the Patches that are ready
 for merge to the tree.
+
 
 To-do Lists
 ~~~~~~~~~~~
@@ -273,6 +282,7 @@ properties:
 `payload`
   Additional information
 
+
 Cover Letter Created
 ~~~~~~~~~~~~~~~~~~~~
 
@@ -283,6 +293,7 @@ Sent when a cover letter is created.
 `cover`
   Created cover letter
 
+
 Patch Created
 ~~~~~~~~~~~~~
 
@@ -292,6 +303,7 @@ Sent when a patch is created.
 
 `patch`
   Created patch
+
 
 Patch Completed
 ~~~~~~~~~~~~~~~
@@ -306,6 +318,7 @@ not in a series is created (since that patch has no dependencies).
 
 `series`
   Series from which patch dependencies were extracted, if any
+
 
 Patch Delegated
 ~~~~~~~~~~~~~~~
@@ -323,6 +336,7 @@ Sent when a patch's delegate is changed.
 `current`
   Current delegate, if any
 
+
 Patch State Changed
 ~~~~~~~~~~~~~~~~~~~
 
@@ -339,6 +353,7 @@ Sent when a patch's state is changed.
 `current`
   Current state
 
+
 Check Created
 ~~~~~~~~~~~~~
 
@@ -348,6 +363,7 @@ Sent when a patch check is created.
 
 `check`
   Created check
+
 
 Series Created
 ~~~~~~~~~~~~~~
@@ -359,6 +375,7 @@ Sent when a series is created.
 `series`
   Created series
 
+
 Series Completed
 ~~~~~~~~~~~~~~~~
 
@@ -368,6 +385,7 @@ Sent when a series is completed.
 
 `series`
   Completed series
+
 
 What's Not Exposed
 ~~~~~~~~~~~~~~~~~~

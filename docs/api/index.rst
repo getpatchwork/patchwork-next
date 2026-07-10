@@ -17,15 +17,17 @@ exposed by the API, refer to the auto-generated OpenAPI documentation at::
 
 where `patchwork.example.com` refers to the URL of your Patchwork instance.
 
-.. versionchanged:: 4.0
+.. version-changed:: 4.0
 
    The OpenAPI schema is now auto-generated at runtime and served at
    `/api/docs`. Static schema files are no longer shipped.
 
-.. versionchanged:: 4.0
+.. version-removed:: 4.0
 
-   The XML-RPC API has been removed. Use the REST API with clients like
-   :program:`git-pw` instead.
+   The XML-RPC API has been removed. Use the REST API with clients like git-pw__
+   instead.
+
+   __ https://github.com/getpatchwork/git-pw
 
 Getting Started
 ---------------
@@ -35,23 +37,25 @@ auto-generated documentation at `/api/docs`.
 
 REST APIs run over plain HTTP(S), thus, the API can be interfaced using
 applications or libraries that support this widespread protocol. One such
-application is `curl`_, which can be used to both retrieve and send information
-to the REST API. For example, to get the version of the REST API for a
-Patchwork instance hosted at `patchwork.example.com`, run:
+application is curl__, which can be used to both retrieve and send information
+to the REST API. For example, to get the version of the REST API for a Patchwork
+instance hosted at `patchwork.example.com`, run:
 
-.. code-block:: shell
+__ https://curl.haxx.se/
 
-    $ curl -s 'https://patchwork.example.com/api/1.4/' | python -m json.tool
-    {
-        "bundles": "https://patchwork.example.com/api/1.4/bundles/",
-        "covers": "https://patchwork.example.com/api/1.4/covers/",
-        "events": "https://patchwork.example.com/api/1.4/events/",
-        "patches": "https://patchwork.example.com/api/1.4/patches/",
-        "people": "https://patchwork.example.com/api/1.4/people/",
-        "projects": "https://patchwork.example.com/api/1.4/projects/",
-        "series": "https://patchwork.example.com/api/1.4/series/",
-        "users": "https://patchwork.example.com/api/1.4/users/"
-    }
+.. code-block:: console
+
+   $ curl -sL https://patchwork.example.com/api/ | jq
+   {
+       "bundles": "https://patchwork.example.com/api/1.4/bundles/",
+       "covers": "https://patchwork.example.com/api/1.4/covers/",
+       "events": "https://patchwork.example.com/api/1.4/events/",
+       "patches": "https://patchwork.example.com/api/1.4/patches/",
+       "people": "https://patchwork.example.com/api/1.4/people/",
+       "projects": "https://patchwork.example.com/api/1.4/projects/",
+       "series": "https://patchwork.example.com/api/1.4/series/",
+       "users": "https://patchwork.example.com/api/1.4/users/"
+   }
 
 Tools like `curl` and libraries like `requests` can be used to build anything
 from small utilities to full-fledged clients targeting the REST API. For an
@@ -104,33 +108,35 @@ Parameters
 
 For `GET` requests, parameters should be passed as HTTP query string parameters:
 
-.. code-block:: shell
+.. code-block:: console
 
-    $ curl 'https://patchwork.example.com/api/patches?state=under-review'
+   $ curl 'https://patchwork.example.com/api/patches?state=under-review'
 
 For `POST` and `PATCH` requests, parameters should be encoded as JSON with
 a `Content-Type` of `application/json`:
 
-.. code-block:: shell
+.. code-block:: console
 
-    $ curl -X PATCH \
-      --header "Content-Type: application/json" \
-      --data '{"state":"under-review"}' \
-      'https://patchwork.example.com/api/patches/123/'
+   $ curl -X PATCH \
+          --header "Content-Type: application/json" \
+          --data '{"state":"under-review"}' \
+          https://patchwork.example.com/api/patches/123
 
 Authentication
 --------------
 
 Patchwork supports authentication using bearer token authentication. To
-authenticate, first generate a token from your user profile page, then::
+authenticate, first generate a token from your user profile page, then:
 
-    $ curl -H "Authorization: Bearer ${token}" \
-        'https://patchwork.example.com/api/'
+.. code-block:: console
 
-The legacy `Token` scheme is also accepted for backward compatibility::
+   $ curl -H "Authorization: Bearer $token" https://patchwork.example.com/api
 
-    $ curl -H "Authorization: Token ${token}" \
-        'https://patchwork.example.com/api/'
+The legacy `Token` scheme is also accepted for backward compatibility:
+
+.. code-block:: console
+
+   $ curl -H "Authorization: Token $token" https://patchwork.example.com/api
 
 Not all resources require authentication. Those that do will return
 `401 (Unauthorized)` if authentication is not provided.
@@ -144,12 +150,9 @@ can change page using the `?page` parameter and set custom page sizes up to
 
 .. code-block:: shell
 
-    $ curl 'https://patchwork.example.com/api/patches?page=2&per_page=100'
+   $ curl 'https://patchwork.example.com/api/patches?page=2&per_page=100'
 
 The `Link` header includes pagination information::
 
     Link: <https://patchwork.example.com/api/patches?page=3&per_page=100>; rel="next",
       <https://patchwork.example.com/api/patches?page=50&per_page=100>; rel="last"
-
-
-.. _curl: https://curl.haxx.se/

@@ -16,12 +16,13 @@ configured using the `pw` command line tool.
    require configuration of autodelegation rules on a local instance, contact
    your Patchwork administrator.
 
+
 Managing Rules
 --------------
 
 Rules are managed using the `pw admin delegate-rule` subcommand.
 
-To list existing rules for a project::
+To list existing rules for a project:
 
     $ pw admin delegate-rule list my-project
 
@@ -33,9 +34,10 @@ To create a new rule::
         --path "drivers/net/*" \
         --priority 10
 
-To delete a rule::
+To delete a rule:
 
     $ pw admin delegate-rule delete 42
+
 
 Rule Fields
 -----------

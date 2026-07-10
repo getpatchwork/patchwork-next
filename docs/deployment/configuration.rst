@@ -7,7 +7,9 @@ Configuration
 =============
 
 Patchwork is configured through a TOML file. The default configuration can be
-generated with::
+generated with:
+
+.. code-block:: console
 
     $ pw config
 

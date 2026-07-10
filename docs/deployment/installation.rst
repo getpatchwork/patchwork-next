@@ -43,6 +43,7 @@ Install PostgreSQL and create a database:
    $ sudo -u postgres createuser -d patchwork
    $ sudo -u postgres createdb -O patchwork patchwork
 
+
 SQLite
 ~~~~~~
 
@@ -134,10 +135,10 @@ Running Services
 Patchwork consists of two long-running services:
 
 `pw http`
-  The HTTP server exposing the web interface and REST API.
+   The HTTP server exposing the web interface and REST API.
 
 `pw ingress`
-  The SMTP daemon that receives emails from your mail transfer agent.
+   The SMTP daemon that receives emails from your mail transfer agent.
 
 systemd
 ~~~~~~~
@@ -236,11 +237,14 @@ over SMTP. No shell scripts, no special user accounts, no database grants.
    `List-ID` header. Make sure the `-e` (list email) and `-i` (list ID)
    values of your project match what your mailing list software produces.
 
+
 IMAP/POP3
 ~~~~~~~~~
 
 For simpler setups, you can use a mail retriever like `getmail`__ to download
 messages from an inbox and pipe them to Patchwork:
+
+__ http://pyropus.ca/software/getmail/
 
 .. code-block:: ini
 
@@ -248,8 +252,6 @@ messages from an inbox and pipe them to Patchwork:
    type = MDA_external
    path = /usr/bin/pw
    arguments = ("ingress", "--stdin",)
-
-__ http://pyropus.ca/software/getmail/
 
 Manual Import
 ~~~~~~~~~~~~~
@@ -263,8 +265,6 @@ For one-off imports, `pw ingress` can read from stdin:
 
 The `--list-id` flag can be used to override the `List-ID` header.
 
-
-.. _deployment-vcs:
 
 (Optional) VCS Integration
 --------------------------
