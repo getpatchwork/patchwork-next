@@ -69,12 +69,13 @@ version of the patch etc. Patchwork stores not only the patch itself but also
 various metadata associated with the email that the patch was parsed from, such
 as the message headers or the date the message itself was received.
 
+
 Cover Letters
 ~~~~~~~~~~~~~
 
 Cover letters provide a way to offer a "big picture" overview of a series of
-patches. When using Git, these mails can be recognised by way of their ``0/N``
-subject prefix, e.g. ``[00/11] A sample series``. Like patches, Patchwork
+patches. When using Git, these mails can be recognised by way of their `0/N`
+subject prefix, e.g. `[00/11] A sample series`. Like patches, Patchwork
 stores not only the various aspects of the cover letter itself, such as the
 name and body of the cover letter, but also various metadata associated with
 the email that the cover letter was parsed from.
@@ -126,17 +127,17 @@ or a comment on a patch. Patchwork extracts these tags at parse time and
 associates them with the patch. You add extra tags to an email by replying to
 the email. The following tags are available on a standard Patchwork install:
 
-``Acked-by:``
+`Acked-by:`
   For example::
 
       Acked-by: Stephen Finucane <stephen@that.guru>
 
-``Tested-by:``
+`Tested-by:`
   For example::
 
       Tested-by: Stephen Finucane <stephen@that.guru>
 
-``Reviewed-by:``
+`Reviewed-by:`
   For example::
 
       Reviewed-by: Stephen Finucane <stephen@that.guru>
@@ -151,7 +152,7 @@ declaring dependencies between series. The tag may be included in the cover
 letter or any patch of a series and should reference the message ID of a patch
 or a cover letter or the web URL to a patch or a series:
 
-``Depends-on:``
+`Depends-on:`
   For example::
 
     Depends-on: <20240726221429.221611-1-user@example.com>
@@ -160,7 +161,7 @@ or a cover letter or the web URL to a patch or a series:
 .. note::
 
     Series dependencies are not shown by default. This can be changed by
-    enabling the ``show_dependencies`` flag for each project.
+    enabling the `show_dependencies` flag for each project.
 
 __ https://www.kernel.org/doc/html/latest/process/submitting-patches.html
 
@@ -182,8 +183,8 @@ system to test patches. Checks have a number of fields associated with them:
   test logs.
 
 **State**
-  The state of the check. One of: ``pending``, ``success``, ``warning``,
-  ``fail``
+  The state of the check. One of: `pending`, `success`, `warning`,
+  `fail`
 
 **User**
   The user creating the check
@@ -257,115 +258,115 @@ Events are raised whenever patches are created or modified.
 All events have a number of common properties, along with some event-specific
 properties:
 
-``category``
+`category`
   The type of event
 
-``project``
+`project`
   The project this event belongs to
 
-``date``
+`date`
   When this event was created
 
-``actor``
+`actor`
   The user, if any, that caused/created this event
 
-``payload``
+`payload`
   Additional information
 
 Cover Letter Created
 ~~~~~~~~~~~~~~~~~~~~
 
-:Category: ``cover-created``
+:Category: `cover-created`
 
 Sent when a cover letter is created.
 
-``cover``
+`cover`
   Created cover letter
 
 Patch Created
 ~~~~~~~~~~~~~
 
-:Category: ``patch-created``
+:Category: `patch-created`
 
 Sent when a patch is created.
 
-``patch``
+`patch`
   Created patch
 
 Patch Completed
 ~~~~~~~~~~~~~~~
 
-:Category: ``patch-completed``
+:Category: `patch-completed`
 
 Sent when a patch in a series has its dependencies met, or when a patch that is
 not in a series is created (since that patch has no dependencies).
 
-``patch``
+`patch`
   Completed patch
 
-``series``
+`series`
   Series from which patch dependencies were extracted, if any
 
 Patch Delegated
 ~~~~~~~~~~~~~~~
 
-:Category: ``patch-delegated``
+:Category: `patch-delegated`
 
 Sent when a patch's delegate is changed.
 
-``patch``
+`patch`
   Updated patch
 
-``previous``
+`previous`
   Previous delegate, if any
 
-``current``
+`current`
   Current delegate, if any
 
 Patch State Changed
 ~~~~~~~~~~~~~~~~~~~
 
-:Category: ``patch-state-changed``
+:Category: `patch-state-changed`
 
 Sent when a patch's state is changed.
 
-``patch``
+`patch`
   Updated patch
 
-``previous``
+`previous`
   Previous state
 
-``current``
+`current`
   Current state
 
 Check Created
 ~~~~~~~~~~~~~
 
-:Category: ``check-created``
+:Category: `check-created`
 
 Sent when a patch check is created.
 
-``check``
+`check`
   Created check
 
 Series Created
 ~~~~~~~~~~~~~~
 
-:Category: ``series-created``
+:Category: `series-created`
 
 Sent when a series is created.
 
-``series``
+`series`
   Created series
 
 Series Completed
 ~~~~~~~~~~~~~~~~
 
-:Category: ``series-completed``
+:Category: `series-completed`
 
 Sent when a series is completed.
 
-``series``
+`series`
   Completed series
 
 What's Not Exposed

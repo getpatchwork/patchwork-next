@@ -20,7 +20,7 @@ Overview
 --------
 
 Patchwork 4.0 is a complete rewrite in Go. The deployment model is fundamentally
-different: a single ``pw`` binary replaces Django, gunicorn/uwsgi, virtualenvs,
+different: a single `pw` binary replaces Django, gunicorn/uwsgi, virtualenvs,
 and management commands.
 
 The database schema is similar but not identical, which is why data must be
@@ -42,28 +42,28 @@ Command Mapping
 
    * - Django (old)
      - Go (new)
-   * - ``manage.py createsuperuser``
-     - ``pw admin user create --admin``
-   * - ``manage.py migrate``
-     - ``pw db sync``
-   * - ``manage.py parsemail``
-     - ``pw ingress --stdin``
-   * - ``manage.py parsearchive``
-     - ``pw ingress --mbox``
-   * - ``manage.py cron``
-     - ``pw admin gc``
-   * - ``manage.py dumparchive``
+   * - `manage.py createsuperuser`
+     - `pw admin user create --admin`
+   * - `manage.py migrate`
+     - `pw db sync`
+   * - `manage.py parsemail`
+     - `pw ingress --stdin`
+   * - `manage.py parsearchive`
+     - `pw ingress --mbox`
+   * - `manage.py cron`
+     - `pw admin gc`
+   * - `manage.py dumparchive`
      - no equivalent
-   * - Django admin panel (``/admin``)
-     - ``pw admin`` subcommands
-   * - ``production.py`` settings
-     - ``patchwork.toml``
+   * - Django admin panel (`/admin`)
+     - `pw admin` subcommands
+   * - `production.py` settings
+     - `patchwork.toml`
    * - gunicorn/uwsgi + nginx
-     - ``pw http`` + nginx
+     - `pw http` + nginx
    * - XML-RPC API
      - removed, use REST API
-   * - ``/etc/aliases`` + ``parsemail.sh``
-     - postfix transport maps to ``pw ingress``
+   * - `/etc/aliases` + `parsemail.sh`
+     - postfix transport maps to `pw ingress`
 
 
 Configuration Mapping
@@ -75,18 +75,18 @@ Configuration Mapping
 
    * - Django setting
      - TOML equivalent
-   * - ``DATABASES['default']``
-     - ``[database] url``
-   * - ``NOTIFICATION_FROM_EMAIL``
-     - ``[smtp] from``
-   * - ``DEFAULT_ITEMS_PER_PAGE``
+   * - `DATABASES['default']`
+     - `[database] url`
+   * - `NOTIFICATION_FROM_EMAIL`
+     - `[smtp] from`
+   * - `DEFAULT_ITEMS_PER_PAGE`
      - built-in default (30)
-   * - ``ENABLE_REST_API``
+   * - `ENABLE_REST_API`
      - always enabled
-   * - ``ENABLE_XMLRPC``
+   * - `ENABLE_XMLRPC`
      - removed
-   * - ``FORCE_HTTPS_LINKS``
-     - set ``[http] base-url`` with ``https://``
+   * - `FORCE_HTTPS_LINKS`
+     - set `[http] base-url` with `https://`
 
 
 Migration Procedure
@@ -99,7 +99,7 @@ Migration Procedure
 
    $ pg_dump patchwork > patchwork-django-backup.sql
 
-2. Install the ``pw`` binary
+2. Install the `pw` binary
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Build from source or download a release:
@@ -118,7 +118,7 @@ Generate a template and edit it:
 
    $ pw config > /etc/patchwork.toml
 
-Point ``[database] url`` at a **new, empty** database:
+Point `[database] url` at a **new, empty** database:
 
 .. code-block:: toml
 
@@ -137,7 +137,7 @@ This creates the 4.0 schema and seeds default states and tags.
 5. Export data from the old database
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Run ``pw db export`` against the **old** Django database. This reads the Django
+Run `pw db export` against the **old** Django database. This reads the Django
 3.2 schema and produces SQL that is compatible with the 4.0 schema:
 
 .. code-block:: console
@@ -166,19 +166,19 @@ Enable and start the services:
 
 Replace the old aliases-based setup with transport maps.
 
-Remove from ``/etc/aliases``:
+Remove from `/etc/aliases`:
 
 .. code-block:: ini
 
    patchwork: "|/opt/patchwork/patchwork/bin/parsemail.sh"
 
-Add to ``/etc/postfix/main.cf``:
+Add to `/etc/postfix/main.cf`:
 
 .. code-block:: ini
 
    transport_maps = lmdb:/etc/postfix/transport
 
-Create ``/etc/postfix/transport``:
+Create `/etc/postfix/transport`:
 
 .. code-block:: bash
 
@@ -194,7 +194,7 @@ Rebuild and reload:
 9. Update nginx
 ~~~~~~~~~~~~~~~~
 
-Replace the gunicorn/uwsgi upstream with the ``pw http`` server:
+Replace the gunicorn/uwsgi upstream with the `pw http` server:
 
 .. code-block:: nginx
 
@@ -210,8 +210,8 @@ Replace the gunicorn/uwsgi upstream with the ``pw http`` server:
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 - Check the web interface is accessible.
-- Verify the REST API returns data: ``curl https://patchwork.example.com/api/``
-- Send a test email to confirm ``pw ingress`` processes it.
+- Verify the REST API returns data: `curl https://patchwork.example.com/api/`
+- Send a test email to confirm `pw ingress` processes it.
 - Decommission the old Django installation.
 
 

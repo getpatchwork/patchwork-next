@@ -14,9 +14,9 @@ generated with::
 Configuration files are loaded in the following order, with later files
 overriding earlier ones:
 
-1. ``/etc/patchwork.toml``
-2. ``patchwork.toml`` (current directory)
-3. ``$PATCHWORK_TOML`` (environment variable)
+1. `/etc/patchwork.toml`
+2. `patchwork.toml` (current directory)
+3. `$PATCHWORK_TOML` (environment variable)
 
 Command-line flags take precedence over all configuration files.
 

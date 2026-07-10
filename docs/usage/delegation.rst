@@ -8,7 +8,7 @@ Autodelegation
 
 Autodelegation allows patches to be automatically delegated to a user based on
 the files modified by the patch. To do this, a number of rules can be
-configured using the ``pw`` command line tool.
+configured using the `pw` command line tool.
 
 .. note::
 
@@ -19,7 +19,7 @@ configured using the ``pw`` command line tool.
 Managing Rules
 --------------
 
-Rules are managed using the ``pw admin delegate-rule`` subcommand.
+Rules are managed using the `pw admin delegate-rule` subcommand.
 
 To list existing rules for a project::
 
@@ -51,7 +51,7 @@ Priority
 Path
   A path in `fnmatch`__ format. The fnmatch library allows for limited, Unix
   shell-style wildcarding. Filenames are extracted from patch lines beginning
-  with ``---`` or ``+++``.
+  with `---` or `+++`.
 
   You can simply use a bare path::
 

@@ -2,11 +2,11 @@
 features:
   - |
     Complete rewrite in Go. Patchwork is now delivered as a single static
-    binary (``pw``) that replaces Django, gunicorn/uwsgi, virtualenvs, and all
+    binary (`pw`) that replaces Django, gunicorn/uwsgi, virtualenvs, and all
     Python dependencies. Building requires only a Go toolchain. Deployment
     requires only the binary and a configuration file.
   - |
-    Built-in SMTP/LMTP ingress daemon (``pw ingress``). Incoming email is
+    Built-in SMTP/LMTP ingress daemon (`pw ingress`). Incoming email is
     received directly over SMTP instead of being piped through a shell script.
     This integrates cleanly with Postfix transport maps and removes the need
     for special user accounts or database grants for the mail delivery agent.
@@ -19,26 +19,26 @@ api:
   - |
     The XML-RPC API has been removed. The REST API is the only supported
     programmatic interface. Clients that relied on XML-RPC (e.g. older versions
-    of ``pwclient``) should switch to the REST API via ``git-pw``.
+    of `pwclient`) should switch to the REST API via `git-pw`.
   - |
     The OpenAPI schema is now auto-generated at runtime and served at
-    ``/api/docs``. Static schema files are no longer shipped in the source
+    `/api/docs`. Static schema files are no longer shipped in the source
     tree.
 upgrade:
   - |
     Configuration has moved from Django Python settings files
-    (``production.py``) to a TOML file (``patchwork.toml``). See the
+    (`production.py`) to a TOML file (`patchwork.toml`). See the
     :doc:`migration guide </deployment/migration>` for a mapping of Django
     settings to TOML keys.
   - |
     Database migration from Django 3.2 to 4.0 is supported via
-    ``pw db export`` (reads the old schema) and ``pw db import`` (loads into
-    the new schema). See the :doc:`migration guide </deployment/migration>`
+    `pw db export` (reads the old schema) and `pw db import` (loads into
+    the new schema). See the :doc:`/deployment/migration`
     for the full procedure.
   - |
-    Postfix integration has changed from ``/etc/aliases`` piping to
-    ``parsemail.sh`` to transport maps forwarding to the ``pw ingress`` SMTP
-    daemon. See :ref:`deployment-parsemail` for the new configuration.
+    Postfix integration has changed from `/etc/aliases` piping to
+    `parsemail.sh` to transport maps forwarding to the `pw ingress` SMTP
+    daemon. See :ref:`ingress-transport` for the new configuration.
   - |
     User passwords stored in Django's PBKDF2-SHA256 format are read natively.
     No password reset is required after migration.

@@ -15,7 +15,7 @@ Requirements
 
 Patchwork requires:
 
-- The ``pw`` binary (built from source or downloaded from a release)
+- The `pw` binary (built from source or downloaded from a release)
 - A supported database: PostgreSQL (recommended), MySQL/MariaDB, or SQLite
 - A mail transfer agent (e.g. Postfix) for receiving patches
 - A reverse proxy (e.g. nginx) for TLS termination (optional but recommended)
@@ -68,7 +68,7 @@ Generate a default configuration file:
 
    $ pw config > /etc/patchwork.toml
 
-Edit ``/etc/patchwork.toml`` to set at least the database URL and the HTTP base
+Edit `/etc/patchwork.toml` to set at least the database URL and the HTTP base
 URL. See :doc:`configuration` for a full reference of all available settings.
 
 A minimal configuration looks like:
@@ -133,16 +133,16 @@ Running Services
 
 Patchwork consists of two long-running services:
 
-``pw http``
+`pw http`
   The HTTP server exposing the web interface and REST API.
 
-``pw ingress``
+`pw ingress`
   The SMTP daemon that receives emails from your mail transfer agent.
 
 systemd
 ~~~~~~~
 
-The ``make install`` target installs systemd unit files. Enable and start the
+The `make install` target installs systemd unit files. Enable and start the
 services:
 
 .. code-block:: console
@@ -150,8 +150,8 @@ services:
    $ sudo systemctl daemon-reload
    $ sudo systemctl enable --now pw-http pw-ingress
 
-The unit files are installed to ``/usr/lib/systemd/system/``. To override
-settings, use ``systemctl edit``:
+The unit files are installed to `/usr/lib/systemd/system`. To override settings,
+use `systemctl edit`:
 
 .. code-block:: console
 
@@ -159,8 +159,8 @@ settings, use ``systemctl edit``:
 
 .. note::
 
-   Both services read configuration from ``/etc/patchwork.toml`` by default.
-   Use the ``PATCHWORK_TOML`` environment variable to specify an alternative
+   Both services read configuration from `/etc/patchwork.toml` by default.
+   Use the env:`PATCHWORK_TOML` environment variable to specify an alternative
    path.
 
 
@@ -168,8 +168,8 @@ Reverse Proxy
 -------------
 
 A reverse proxy like nginx is recommended for TLS termination and static file
-serving. The ``make install`` target installs a default nginx configuration to
-``/etc/nginx/conf.d/patchwork.conf``.
+serving. The `make install` target installs a default nginx configuration to
+`/etc/nginx/conf.d/patchwork.conf`.
 
 A minimal nginx configuration:
 
@@ -192,28 +192,29 @@ A minimal nginx configuration:
    }
 
 
-.. _deployment-parsemail:
-
 Incoming Email
 --------------
 
 Patchwork needs to receive emails from your mailing list. The recommended
 approach is to configure your mail transfer agent to forward messages to the
-``pw ingress`` SMTP daemon.
+`pw ingress` SMTP daemon.
+
+
+.. _ingress-transport:
 
 Postfix with Transport Maps
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 This is the recommended setup. Configure Postfix to route mail for your list
-domain to the ``pw ingress`` daemon using transport maps.
+domain to the `pw ingress` daemon using transport maps.
 
-Add to ``/etc/postfix/main.cf``:
+Add to `/etc/postfix/main.cf`:
 
 .. code-block:: ini
 
    transport_maps = lmdb:/etc/postfix/transport
 
-Create ``/etc/postfix/transport``:
+Create `/etc/postfix/transport`:
 
 .. code-block:: bash
 
@@ -226,14 +227,13 @@ Build the transport map and reload Postfix:
    $ sudo postmap /etc/postfix/transport
    $ sudo systemctl reload postfix
 
-All mail addressed to ``lists.example.com`` will now be forwarded to
-``pw ingress`` over SMTP. No shell scripts, no special user accounts, no
-database grants.
+All mail addressed to `lists.example.com` will now be forwarded to `pw ingress`
+over SMTP. No shell scripts, no special user accounts, no database grants.
 
 .. note::
 
-   The ``pw ingress`` daemon matches incoming emails to projects by their
-   ``List-ID`` header. Make sure the ``-e`` (list email) and ``-i`` (list ID)
+   The `pw ingress` daemon matches incoming emails to projects by their
+   `List-ID` header. Make sure the `-e` (list email) and `-i` (list ID)
    values of your project match what your mailing list software produces.
 
 IMAP/POP3
@@ -254,14 +254,14 @@ __ http://pyropus.ca/software/getmail/
 Manual Import
 ~~~~~~~~~~~~~
 
-For one-off imports, ``pw ingress`` can read from stdin:
+For one-off imports, `pw ingress` can read from stdin:
 
 .. code-block:: console
 
    $ pw ingress --stdin < email.eml
    $ pw ingress --mbox < archive.mbox
 
-The ``--list-id`` flag can be used to override the ``List-ID`` header.
+The `--list-id` flag can be used to override the `List-ID` header.
 
 
 .. _deployment-vcs:
@@ -269,11 +269,11 @@ The ``--list-id`` flag can be used to override the ``List-ID`` header.
 (Optional) VCS Integration
 --------------------------
 
-Patchwork can update patch states automatically when commits are pushed. A
-``post-receive`` Git hook can be configured to mark patches as "accepted" when
+Patchwork can update patch states automatically when commits are pushed.
+A `post-receive` Git hook can be configured to mark patches as "accepted" when
 their corresponding commits land in the repository.
 
-Refer to the ``post-receive.hook`` script in the Patchwork source tree for an
+Refer to the `post-receive.hook` script in the Patchwork source tree for an
 example implementation that uses the REST API.
 
 
@@ -287,7 +287,8 @@ confirmations, and inactive users:
 
    $ pw admin gc
 
-A cron job or systemd timer is recommended (e.g. ``/etc/cron.daily/patchwork-gc``):
+A cron job or systemd timer is recommended (e.g.
+`/etc/cron.daily/patchwork-gc`):
 
 .. code-block:: bash
 

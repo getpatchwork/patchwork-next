@@ -69,6 +69,7 @@ docs:
 		-Dversion="$(PATCHWORK_VERSION)" \
 		-Drelease="$(PATCHWORK_VERSION)" \
 		-Dtoday="$(DATE)" \
+		-Ddefault_role=code \
 		-Dexclude_patterns=_build,.venv \
 		-Dhtml_theme=sphinx_rtd_theme \
 		docs docs/_build

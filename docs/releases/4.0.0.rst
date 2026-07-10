@@ -16,7 +16,7 @@ Highlights:
 - Built-in SMTP/LMTP daemon for receiving emails from Postfix via transport
   maps.
 - Webhook support for event-driven integrations.
-- Auto-generated OpenAPI documentation served at ``/api/docs``.
+- Auto-generated OpenAPI documentation served at `/api/docs`.
 - XML-RPC API removed in favor of the REST API.
 - Database migration tooling for existing Django installations.
 - Compatible with existing user credentials (PBKDF2-SHA256 passwords).

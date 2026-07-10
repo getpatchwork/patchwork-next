@@ -15,12 +15,12 @@ exposed by the API, refer to the auto-generated OpenAPI documentation at::
 
     https://patchwork.example.com/api/docs
 
-where ``patchwork.example.com`` refers to the URL of your Patchwork instance.
+where `patchwork.example.com` refers to the URL of your Patchwork instance.
 
 .. versionchanged:: 4.0
 
    The OpenAPI schema is now auto-generated at runtime and served at
-   ``/api/docs``. Static schema files are no longer shipped.
+   `/api/docs`. Static schema files are no longer shipped.
 
 .. versionchanged:: 4.0
 
@@ -31,13 +31,13 @@ Getting Started
 ---------------
 
 The easiest way to start experimenting with the API is to visit the
-auto-generated documentation at ``/api/docs``.
+auto-generated documentation at `/api/docs`.
 
 REST APIs run over plain HTTP(S), thus, the API can be interfaced using
 applications or libraries that support this widespread protocol. One such
 application is `curl`_, which can be used to both retrieve and send information
 to the REST API. For example, to get the version of the REST API for a
-Patchwork instance hosted at ``patchwork.example.com``, run:
+Patchwork instance hosted at `patchwork.example.com`, run:
 
 .. code-block:: shell
 
@@ -61,7 +61,7 @@ Versioning
 ----------
 
 By default, all requests will receive the latest version of the API: currently
-``1.4``:
+`1.4`:
 
 .. code-block:: http
 
@@ -88,29 +88,28 @@ Older API versions will be deprecated and removed over time.
 Schema
 ------
 
-Responses are returned as JSON. Blank fields are returned as ``null``, rather
-than being omitted. Timestamps use the ISO 8601 format, times are in UTC::
+Responses are returned as JSON. Blank fields are returned as `null`, rather than
+being omitted. Timestamps use the ISO 8601 format, times are in UTC::
 
     YYYY-MM-DDTHH:MM:SSZ
 
 Requests should use either query parameters or form-data, depending on the
 method.
 
-The auto-generated OpenAPI schema is available at ``/api/docs`` and describes
-all endpoints, parameters, and response formats.
+The auto-generated OpenAPI schema is available at `/api/docs` and describes all
+endpoints, parameters, and response formats.
 
 Parameters
 ----------
 
-For ``GET`` requests, parameters should be passed as HTTP query string
-parameters:
+For `GET` requests, parameters should be passed as HTTP query string parameters:
 
 .. code-block:: shell
 
     $ curl 'https://patchwork.example.com/api/patches?state=under-review'
 
-For ``POST`` and ``PATCH`` requests, parameters should be encoded as JSON with
-a ``Content-Type`` of ``application/json``:
+For `POST` and `PATCH` requests, parameters should be encoded as JSON with
+a `Content-Type` of `application/json`:
 
 .. code-block:: shell
 
@@ -128,26 +127,26 @@ authenticate, first generate a token from your user profile page, then::
     $ curl -H "Authorization: Bearer ${token}" \
         'https://patchwork.example.com/api/'
 
-The legacy ``Token`` scheme is also accepted for backward compatibility::
+The legacy `Token` scheme is also accepted for backward compatibility::
 
     $ curl -H "Authorization: Token ${token}" \
         'https://patchwork.example.com/api/'
 
 Not all resources require authentication. Those that do will return
-``401 (Unauthorized)`` if authentication is not provided.
+`401 (Unauthorized)` if authentication is not provided.
 
 Pagination
 ----------
 
 Requests that return multiple items are paginated by 30 items by default. You
-can change page using the ``?page`` parameter and set custom page sizes up to
-250 using the ``?per_page`` parameter:
+can change page using the `?page` parameter and set custom page sizes up to
+250 using the `?per_page` parameter:
 
 .. code-block:: shell
 
     $ curl 'https://patchwork.example.com/api/patches?page=2&per_page=100'
 
-The ``Link`` header includes pagination information::
+The `Link` header includes pagination information::
 
     Link: <https://patchwork.example.com/api/patches?page=3&per_page=100>; rel="next",
       <https://patchwork.example.com/api/patches?page=50&per_page=100>; rel="last"

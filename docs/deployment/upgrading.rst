@@ -22,7 +22,7 @@ Always back up your database before upgrading:
 Upgrade Steps
 -------------
 
-1. Install the new ``pw`` binary (e.g. ``make && sudo make install``).
+1. Install the new `pw` binary (e.g. `make && sudo make install`).
 
 2. Run pending database migrations:
 
