@@ -26,78 +26,119 @@ Command-line flags take precedence over all configuration files.
 Settings Reference
 ------------------
 
-``[database]``
-~~~~~~~~~~~~~~
+.. confval:: syslog
+   :type: bool
+   :default: `false`
 
-``url``
-  Database connection URL. Supported schemes:
+   Redirect logging to syslog instead of stderr.
 
-  - ``postgres://user:pass@host/dbname?sslmode=disable``
-  - ``mysql://user:pass@host/dbname``
-  - ``sqlite:///path/to/file.db``
+.. confval:: [database].url
+   :type: string
+   :default: `""`
 
-``auto-sync``
-  Automatically run pending migrations when the HTTP server starts.
-  Default: ``false``.
+   Database connection URL. Supported schemes:
 
-``[http]``
-~~~~~~~~~~
+   - `postgres://user:pass@host/dbname?sslmode=disable`
+   - `mysql://user:pass@host/dbname`
+   - `sqlite:///path/to/file.db`
 
-``listen``
-  HTTP listen address. Default: ``127.0.0.1:8080``.
+   .. important::
 
-``base-url``
-  The public base URL of the Patchwork instance, used for generating links in
-  emails and API responses. Example: ``https://patchwork.example.com``.
+      The `user` and `pass` values must be URL-encoded. Use the `pw config
+      url` command to generate valid connection URLs:
 
-``custom-css``
-  Path to a custom CSS file. It is served after the built-in stylesheet,
-  allowing you to override any default styles. The file is read once at startup.
+      .. code-block:: console
 
-``nav-html``
-  Path to an HTML file whose content is inserted in the page header, after the
-  navigation bar. Can be used to display a logo, additional links, or a banner.
-  The file is read once at startup.
+         $ ./pw config url
+         Database type (postgres, mysql, sqlite) [postgres]: mysql
+         Host [localhost]:
+         Port [3306]:
+         Database name [patchwork]: patchwork4
+         Username [patchwork]:
+         Password: p@tch/w0rk!
 
-``footer-html``
-  Path to an HTML file whose content is inserted in the page footer. Can be used
-  for legal notices or organization-specific links. The file is read once at
-  startup.
+         url = "mysql://patchwork:p%40tch%2Fw0rk%21@localhost/patchwork4"
 
-``[ingress]``
-~~~~~~~~~~~~~
+.. confval:: [database].auto-sync
+   :type: bool
+   :default: `false`
 
-``listen``
-  SMTP listen address for the ingress daemon. Default: ``127.0.0.1:2525``.
+   Automatically run pending migrations when the HTTP server starts.
 
-``[smtp]``
-~~~~~~~~~~
+.. confval:: [http].listen
+   :type: string
+   :default: `"127.0.0.1:8080"`
 
-Outgoing mail configuration for notifications.
+   HTTP listen address.
 
-``encryption``
-  SMTP encryption mode. One of ``none``, ``starttls``, ``tls``.
-  Default: ``none``.
+.. confval:: [http].base-url
+   :type: string
+   :default: `""`
 
-``host``
-  SMTP server hostname. Default: ``localhost``.
+   The public base URL of the Patchwork instance, used for generating links in
+   emails and API responses. Example: `https://patchwork.example.com`.
 
-``port``
-  SMTP server port. Default: ``25``.
+.. confval:: [http].custom-css
+   :type: string
+   :default: `""`
 
-``user``
-  SMTP authentication username. Leave empty for unauthenticated delivery.
+   Path to a custom CSS file. It is served after the built-in stylesheet,
+   allowing you to override any default styles. The file is read once at startup.
 
-``password``
-  SMTP authentication password.
+.. confval:: [http].nav-html
+   :type: string
+   :default: `""`
 
-``from``
-  Sender email address for outgoing notifications.
-  Default: ``patchwork@localhost``.
+   Path to an HTML file whose content is inserted in the page header, after the
+   navigation bar. Can be used to display a logo, additional links, or a banner.
+   The file is read once at startup.
 
+.. confval:: [http].footer-html
+   :type: string
+   :default: `""`
 
-Global Flags
-------------
+   Path to an HTML file whose content is inserted in the page footer. Can be used
+   for legal notices or organization-specific links. The file is read once at
+   startup.
 
-``-S``, ``--syslog``
-  Redirect logging to syslog instead of stderr.
+.. confval:: [ingress].listen
+   :type: string
+   :default: `"127.0.0.1:2525"`
+
+   SMTP listen address for the ingress daemon.
+
+.. confval:: [smtp].encryption
+   :type: enum (`none`, `starttls`, `tls`)
+   :default: `none`
+
+   SMTP encryption mode.
+
+.. confval:: [smtp].host
+   :type: string
+   :default: `"localhost"`
+
+   SMTP server hostname.
+
+.. confval:: [smtp].port
+   :type: int
+   :default: `25`
+
+   SMTP server port.
+
+.. confval:: [smtp].user
+   :type: string
+   :default: `""`
+
+   SMTP authentication username. Leave empty for unauthenticated delivery.
+
+.. confval:: [smtp].password
+   :type: string
+   :default: `""`
+
+   SMTP authentication password.
+
+.. confval:: [smtp].from
+   :type: string
+   :default: `"patchwork@localhost"`
+
+   Sender email address for outgoing notifications.
