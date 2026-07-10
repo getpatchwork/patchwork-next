@@ -8,12 +8,13 @@ package main
 import (
 	"context"
 	"fmt"
-	"os"
 	"runtime"
+	"strings"
 
 	"github.com/alecthomas/kong"
 
 	"github.com/getpatchwork/patchwork/cmd/pw/admin"
+	pwcfg "github.com/getpatchwork/patchwork/cmd/pw/config"
 	pwdb "github.com/getpatchwork/patchwork/cmd/pw/db"
 	"github.com/getpatchwork/patchwork/cmd/pw/http"
 	"github.com/getpatchwork/patchwork/cmd/pw/ingress"
@@ -28,7 +29,7 @@ type CLI struct {
 
 	ShowVersion VersionFlag `name:"version" help:"Print patchwork version and exit."`
 
-	GenCfg  struct{}    `cmd:"" name:"config" help:"Print default configuration to stdout."`
+	Cfg     pwcfg.CLI   `cmd:"" name:"config" help:"Configuration utilities."`
 	Admin   admin.CLI   `cmd:"" help:"Administration CLI."`
 	DB      pwdb.CLI    `cmd:"" help:"Database management."`
 	Ingress ingress.CLI `cmd:"" help:"Ingress SMTP/LMTP daemon."`
@@ -57,8 +58,12 @@ func main() {
 
 	k := config.Parse(&cli, "Patchwork runtime commands.")
 
-	if k.Command() == "config" {
-		k.FatalIfErrorf(config.Generate(&cli.Config, os.Stdout))
+	if strings.HasPrefix(k.Command(), "config") {
+		k.FatalIfErrorf(k.Run(&pw.Context{
+			Context: context.Background(),
+			Config:  &cli.Config,
+			Version: Version,
+		}))
 		return
 	}
 
