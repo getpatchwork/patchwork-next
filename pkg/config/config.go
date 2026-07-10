@@ -26,9 +26,7 @@ type DatabaseConfig struct {
 }
 
 type IngressConfig struct {
-	Listen         string `name:"listen" help:"SMTP listen address." default:"127.0.0.1:2525"`
-	MaxMessageSize int    `name:"max-message-size" help:"Maximum message size in bytes." default:"10485760"`
-	MaxRecipients  int    `name:"max-recipients" help:"Maximum number of recipients." default:"100"`
+	Listen string `help:"SMTP listen address." default:"127.0.0.1:2525"`
 }
 
 type HttpConfig struct {

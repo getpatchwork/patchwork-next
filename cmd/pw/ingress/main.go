@@ -123,8 +123,6 @@ func startSMTPServer(cfg *config.Config, be smtp.Backend) (net.Listener, *smtp.S
 	s.Domain = "localhost"
 	s.ReadTimeout = 30 * time.Second
 	s.WriteTimeout = 30 * time.Second
-	s.MaxMessageBytes = int64(cfg.Ingress.MaxMessageSize)
-	s.MaxRecipients = cfg.Ingress.MaxRecipients
 	s.AllowInsecureAuth = true
 	s.EnableSMTPUTF8 = true
 	s.LMTP = strings.Contains(cfg.Ingress.Listen, "/")
@@ -182,21 +180,10 @@ func (s *session) Rcpt(to string, opts *smtp.RcptOptions) error {
 }
 
 func (s *session) Data(r io.Reader) error {
-	maxSize := int64(s.backend.cfg.Ingress.MaxMessageSize)
-
-	var buf bytes.Buffer
-	n, err := io.CopyN(&buf, r, maxSize)
-	switch {
-	case n == maxSize:
-		_, _ = io.Copy(io.Discard, r)
-		return smtp.ErrDataTooLarge
-	case errors.Is(err, io.EOF):
-		// message fit within limit
-	case err != nil:
+	data, err := io.ReadAll(r)
+	if err != nil {
 		return err
 	}
-
-	data := buf.Bytes()
 
 	// check for auto-submitted messages (OOO, auto-replies)
 	entity, err := message.Read(bytes.NewReader(data))

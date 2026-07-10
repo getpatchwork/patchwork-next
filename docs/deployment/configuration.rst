@@ -68,12 +68,6 @@ Settings Reference
 ``listen``
   SMTP listen address for the ingress daemon. Default: ``127.0.0.1:2525``.
 
-``max-message-size``
-  Maximum email message size in bytes. Default: ``10485760`` (10 MB).
-
-``max-recipients``
-  Maximum number of recipients per message. Default: ``100``.
-
 ``[smtp]``
 ~~~~~~~~~~
 
