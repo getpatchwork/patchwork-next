@@ -21,8 +21,8 @@ type Config struct {
 }
 
 type DatabaseConfig struct {
-	URL      string `name:"url" help:"Database connection URL." completion:"sqlite://,postgres://,mysql://"`
-	AutoSync bool   `name:"auto-sync" help:"Automatically run pending migrations at startup."`
+	URL      string `help:"Database connection URL." completion:"sqlite://,postgres://,mysql://"`
+	AutoSync bool   `help:"Automatically run pending migrations at startup."`
 }
 
 type IngressConfig struct {
@@ -31,19 +31,19 @@ type IngressConfig struct {
 
 type HttpConfig struct {
 	BaseURL    string `help:"Base URL of the patchwork instance."`
-	Listen     string `name:"listen" help:"HTTP listen address." default:"127.0.0.1:8080"`
-	CustomCSS  string `name:"custom-css" help:"Path to a custom CSS file served after the built-in stylesheet." type:"existingfile"`
-	NavHTML    string `name:"nav-html" help:"Path to an HTML file whose content is inserted in the navigation bar." type:"existingfile"`
-	FooterHTML string `name:"footer-html" help:"Path to an HTML file whose content is inserted in the footer." type:"existingfile"`
+	Listen     string `help:"HTTP listen address." default:"127.0.0.1:8080"`
+	CustomCSS  string `help:"Path to a custom CSS file served after the built-in stylesheet." type:"existingfile"`
+	NavHTML    string `help:"Path to an HTML file whose content is inserted in the navigation bar." type:"existingfile"`
+	FooterHTML string `help:"Path to an HTML file whose content is inserted in the footer." type:"existingfile"`
 }
 
 type SMTPConfig struct {
-	Encryption string `name:"transport" help:"SMTP encryption" default:"none" enum:"none,starttls,tls"`
-	Host       string `name:"host" help:"SMTP server hostname." default:"localhost"`
-	Port       int    `name:"port" help:"SMTP server port." default:"25"`
-	User       string `name:"user" help:"SMTP authentication username."`
-	Password   string `name:"password" help:"SMTP authentication password."`
-	From       string `name:"from" help:"Sender email address for outgoing mail." default:"patchwork@localhost"`
+	Encryption string `help:"SMTP encryption" default:"none" enum:"none,starttls,tls"`
+	Host       string `help:"SMTP server hostname." default:"localhost"`
+	Port       int    `help:"SMTP server port." default:"25"`
+	User       string `help:"SMTP authentication username."`
+	Password   string `help:"SMTP authentication password."`
+	From       string `help:"Sender email address for outgoing mail." default:"patchwork@localhost"`
 }
 
 const commonDescription = `

@@ -73,7 +73,7 @@ Settings Reference
 
 Outgoing mail configuration for notifications.
 
-``transport``
+``encryption``
   SMTP encryption mode. One of ``none``, ``starttls``, ``tls``.
   Default: ``none``.
 

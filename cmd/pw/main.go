@@ -30,7 +30,7 @@ type CLI struct {
 
 	GenCfg  struct{}    `cmd:"" name:"config" help:"Print default configuration to stdout."`
 	Admin   admin.CLI   `cmd:"" help:"Administration CLI."`
-	DB      pwdb.CLI    `cmd:"" name:"db" help:"Database management."`
+	DB      pwdb.CLI    `cmd:"" help:"Database management."`
 	Ingress ingress.CLI `cmd:"" help:"Ingress SMTP/LMTP daemon."`
 	Http    http.CLI    `cmd:"" help:"HTTP server daemon."`
 }
