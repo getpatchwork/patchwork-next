@@ -46,5 +46,5 @@ func (h *webHandler) ProjectDetail(w http.ResponseWriter, r *http.Request) {
 		Where("archived = ?", false).
 		Count(q.Ctx)
 
-	projectDetailPage(h.pageCtx(r), *project, maintainers, nPatches).Render(ctx, w)
+	projectDetailPage(h.projectPageCtx(r, project), *project, maintainers, nPatches).Render(ctx, w)
 }

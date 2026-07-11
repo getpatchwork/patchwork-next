@@ -88,6 +88,7 @@ type project0001 struct {
 	UseTags              bool   `bun:"use_tags,notnull"`
 	ShowDependencies     bool   `bun:"show_dependencies,notnull"`
 	AutoSupersede        bool   `bun:"auto_supersede,notnull"`
+	NavHTML              string `bun:"nav_html"`
 }
 
 type projectMaintainer0001 struct {

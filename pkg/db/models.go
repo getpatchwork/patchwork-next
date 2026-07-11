@@ -91,6 +91,7 @@ type Project struct {
 	UseTags              bool   `bun:"use_tags,notnull" json:"-"`
 	ShowDependencies     bool   `bun:"show_dependencies,notnull" json:"show_dependencies,omitempty"`
 	AutoSupersede        bool   `bun:"auto_supersede,notnull" json:"-"`
+	NavHTML              string `bun:"nav_html" json:"-"`
 
 	APIURL      string `bun:"-" json:"url,omitempty"`
 	Maintainers []User `bun:"-" json:"maintainers"`

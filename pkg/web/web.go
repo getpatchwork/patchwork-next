@@ -294,6 +294,12 @@ func (h *webHandler) pageCtx(r *http.Request) pageContext {
 	}
 }
 
+func (h *webHandler) projectPageCtx(r *http.Request, p *db.Project) pageContext {
+	pc := h.pageCtx(r)
+	pc.ProjectNavHTML = p.NavHTML
+	return pc
+}
+
 func notFoundPage(w http.ResponseWriter) {
 	w.WriteHeader(http.StatusNotFound)
 	_, _ = w.Write([]byte("Not found"))

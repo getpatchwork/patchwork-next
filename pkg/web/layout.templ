@@ -13,12 +13,13 @@ type breadcrumb struct {
 }
 
 type pageContext struct {
-	User       *db.User
-	CSRFToken  string
-	Version    string
-	CustomCSS  bool
-	NavHTML    string
-	FooterHTML string
+	User           *db.User
+	CSRFToken      string
+	Version        string
+	CustomCSS      bool
+	NavHTML         string
+	ProjectNavHTML string
+	FooterHTML     string
 }
 
 templ layout(title string, crumbs []breadcrumb, pc pageContext) {
@@ -64,6 +65,9 @@ templ layout(title string, crumbs []breadcrumb, pc pageContext) {
 				</nav>
 				if pc.NavHTML != "" {
 					@templ.Raw(pc.NavHTML)
+				}
+				if pc.ProjectNavHTML != "" {
+					@templ.Raw(pc.ProjectNavHTML)
 				}
 			</header>
 			<main>

@@ -77,7 +77,7 @@ func (h *webHandler) CoverDetailPage(w http.ResponseWriter, r *http.Request) {
 	comments, _ := q.ListCoverComments(cover.ID)
 
 	data := coverDetailData{
-		PC:       h.pageCtx(r),
+		PC:       h.projectPageCtx(r, project),
 		Project:  *project,
 		Cover:    cover,
 		Comments: comments,

@@ -59,7 +59,6 @@ func (h *webHandler) todoList(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	q := db.GetQueries(ctx)
 	user := getWebUser(r)
-	pc := h.pageCtx(r)
 	linkname := chi.URLParam(r, "linkname")
 
 	project, err := q.GetProjectByLinkname(linkname)
@@ -67,6 +66,7 @@ func (h *webHandler) todoList(w http.ResponseWriter, r *http.Request) {
 		notFoundPage(w)
 		return
 	}
+	pc := h.projectPageCtx(r, project)
 
 	var patches []db.Patch
 	q.DB.NewSelect().Model(&patches).

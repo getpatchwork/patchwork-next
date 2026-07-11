@@ -119,7 +119,7 @@ func (h *webHandler) PatchList(w http.ResponseWriter, r *http.Request) {
 	delegates, _ := q.ListProjectMaintainers(project.ID)
 
 	data := patchListData{
-		PC:          h.pageCtx(r),
+		PC:          h.projectPageCtx(r, project),
 		Project:     *project,
 		Patches:     patches,
 		Filters:     filters,
@@ -391,7 +391,7 @@ func (h *webHandler) PatchDetailPage(w http.ResponseWriter, r *http.Request) {
 	}
 
 	data := patchDetailData{
-		PC:             h.pageCtx(r),
+		PC:             h.projectPageCtx(r, project),
 		Project:        *project,
 		Patch:          patch,
 		Comments:       comments,

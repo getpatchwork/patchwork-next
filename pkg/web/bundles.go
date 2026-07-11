@@ -45,7 +45,6 @@ func (h *webHandler) BundleList(w http.ResponseWriter, r *http.Request) {
 func (h *webHandler) ProjectBundleList(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	q := db.GetQueries(ctx)
-	pc := h.pageCtx(r)
 	linkname := chi.URLParam(r, "linkname")
 
 	project, err := q.GetProjectByLinkname(linkname)
@@ -53,6 +52,7 @@ func (h *webHandler) ProjectBundleList(w http.ResponseWriter, r *http.Request) {
 		notFoundPage(w)
 		return
 	}
+	pc := h.projectPageCtx(r, project)
 
 	sq := q.DB.NewSelect().Model((*db.Bundle)(nil)).
 		ColumnExpr("*, (SELECT count(*) FROM bundle_patch WHERE bundle_id = bundle.id) AS patch_count").
