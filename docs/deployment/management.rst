@@ -529,8 +529,13 @@ Garbage Collection
 
 .. program:: pw admin gc
 
-Clean up expired sessions, stale email confirmations, and inactive users with
-no pending confirmation. Run this periodically via cron or a systemd timer.
+Clean up expired sessions, stale email confirmations, inactive users with no
+pending confirmation, and old events. Run this periodically via cron or
+a systemd timer.
+
+.. option:: --event-max-age <duration>
+
+   Override :confval:`[database].event-max-age` for this run.
 
 
 Email Ingress

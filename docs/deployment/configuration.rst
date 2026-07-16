@@ -65,6 +65,14 @@ Settings Reference
 
    Automatically run pending migrations when the HTTP server starts.
 
+.. confval:: [database].event-max-age
+   :type: duration
+   :default: `30d`
+
+   Maximum age of events to keep. Events older than this are deleted when
+   running :program:`pw admin gc`. Accepts duration suffixes: `s`, `m`, `h`,
+   `d` (days) and `w` (weeks). Set to `0s` to disable event purging.
+
 .. confval:: [http].listen
    :type: string
    :default: `"127.0.0.1:8080"`

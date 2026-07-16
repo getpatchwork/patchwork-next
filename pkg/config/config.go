@@ -21,8 +21,9 @@ type Config struct {
 }
 
 type DatabaseConfig struct {
-	URL      string `help:"Database connection URL." completion:"sqlite://,postgres://,mysql://"`
-	AutoSync bool   `help:"Automatically run pending migrations at startup."`
+	URL         string   `help:"Database connection URL." completion:"sqlite://,postgres://,mysql://"`
+	AutoSync    bool     `help:"Automatically run pending migrations at startup."`
+	EventMaxAge Duration `help:"Maximum age of events. Used by pw admin gc." default:"30d"`
 }
 
 type IngressConfig struct {

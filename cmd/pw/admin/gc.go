@@ -7,6 +7,7 @@ package admin
 
 import (
 	"fmt"
+	"time"
 
 	"github.com/getpatchwork/patchwork/cmd/pw/pw"
 	"github.com/getpatchwork/patchwork/pkg/db"
@@ -39,6 +40,17 @@ func (c *GcCmd) Run(ctx *pw.Context) error {
 	}
 	if n > 0 {
 		fmt.Printf("deleted %d inactive user(s)\n", n)
+	}
+
+	if ctx.Config.Database.EventMaxAge > 0 {
+		cutoff := time.Now().Add(-ctx.Config.Database.EventMaxAge.Duration())
+		n, err = q.CleanOldEvents(cutoff)
+		if err != nil {
+			return fmt.Errorf("events: %w", err)
+		}
+		if n > 0 {
+			fmt.Printf("deleted %d old event(s)\n", n)
+		}
 	}
 
 	return nil
