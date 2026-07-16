@@ -138,12 +138,22 @@ This creates the 4.0 schema and seeds default states and tags.
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Run `pw db export` against the **old** Django database. This reads the Django
-3.2 schema and produces SQL that is compatible with the 4.0 schema:
+3.2 schema and produces SQL that is compatible with the 4.0 schema. The output
+format and identifier quoting are automatically matched to the source database
+dialect. PostgreSQL exports use the COPY protocol for faster imports.
 
 .. code-block:: console
 
    $ pw --database-url "postgres://patchwork:secret@localhost/patchwork" \
         db export > patchwork-data.sql
+
+To migrate to a different database engine, use `--dialect` to override the
+output format. For example, to export from MySQL for import into PostgreSQL:
+
+.. code-block:: console
+
+   $ pw --database-url "mysql://patchwork:secret@localhost/patchwork" \
+        db export --dialect=postgres > patchwork-data.sql
 
 6. Import data into the new database
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

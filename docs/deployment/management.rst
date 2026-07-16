@@ -37,7 +37,15 @@ tables. On an existing one, it applies pending migrations.
 
 Export data from a Django 3.2 patchwork database as SQL statements. This is used
 during migration from the Python version to the Go version. The output is
-written to stdout.
+written to stdout. Foreign key constraints are disabled during the import
+transaction to speed up bulk loading.
+
+.. option:: --dialect <auto|postgres|mysql|sqlite>
+
+   Target SQL dialect. By default, the dialect is detected from the database
+   connection. PostgreSQL exports use the COPY protocol for speed; MySQL and
+   SQLite exports use INSERT statements. Identifier quoting matches the target
+   dialect. Override this when the target database differs from the source.
 
 ``pw db import``
 ~~~~~~~~~~~~~~~~
