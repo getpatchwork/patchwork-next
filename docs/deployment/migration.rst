@@ -148,9 +148,19 @@ Run `pw db export` against the **old** Django database. This reads the Django
 6. Import data into the new database
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
+Import the exported data using the native client for your database:
+
 .. code-block:: console
 
-   $ pw db import < patchwork-data.sql
+   $ psql -U patchwork -d patchwork4 < patchwork-data.sql
+
+.. code-block:: console
+
+   $ mysql -u patchwork -p patchwork4 < patchwork-data.sql
+
+.. code-block:: console
+
+   $ sqlite3 /var/lib/patchwork/patchwork.db < patchwork-data.sql
 
 7. Set up systemd services
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~

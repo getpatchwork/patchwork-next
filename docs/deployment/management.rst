@@ -47,6 +47,9 @@ written to stdout.
 Import SQL data from stdin into the current database. Used to load data
 previously exported with :program:`pw db export` into a fresh 4.0 database.
 
+For large databases, prefer using the native database client (`psql`, `mysql`,
+`sqlite3`) which streams the input instead of loading it entirely in memory.
+
 
 User Management
 ---------------
