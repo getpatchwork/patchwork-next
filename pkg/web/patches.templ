@@ -248,22 +248,34 @@ templ tagCounts(abbrevs []string, tags map[string]int) {
 }
 
 templ checkCounts(counts [4]int) {
-	if counts[1] > 0 {
-		<check-ok>{ intStr(counts[1]) }</check-ok>
-	} else {
-		{ "-" }
-	}
-	{ "/" }
-	if counts[2] > 0 {
-		<check-warn>{ intStr(counts[2]) }</check-warn>
-	} else {
-		{ "-" }
-	}
-	{ "/" }
 	if counts[3] > 0 {
+		if counts[1] > 0 {
+			{ intStr(counts[1]) }
+		} else {
+			{ "-" }
+		}
+		{ "/" }
+		if counts[2] > 0 {
+			{ intStr(counts[2]) }
+		} else {
+			{ "-" }
+		}
+		{ "/" }
 		<check-fail>{ intStr(counts[3]) }</check-fail>
+	} else if counts[2] > 0 {
+		if counts[1] > 0 {
+			{ intStr(counts[1]) }
+		} else {
+			{ "-" }
+		}
+		{ "/" }
+		<check-warn>{ intStr(counts[2]) }</check-warn>
+		{ "/-" }
+	} else if counts[1] > 0 {
+		<check-ok>{ intStr(counts[1]) }</check-ok>
+		{ "/-/-" }
 	} else {
-		{ "-" }
+		{ "-/-/-" }
 	}
 }
 
