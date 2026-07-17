@@ -128,7 +128,7 @@ templ patchListPage(d patchListData) {
 					<thead>
 						<tr>
 							if d.PC.User != nil {
-								<th><input type="checkbox" title="Select all" id="select-all"/></th>
+								<th class="checkbox"><input type="checkbox" title="Select all" id="select-all"/></th>
 							}
 							@sortHeader("Patch", "name", d)
 							<th>Series</th>
@@ -144,7 +144,7 @@ templ patchListPage(d patchListData) {
 						for _, p := range d.Patches {
 							<tr>
 								if d.PC.User != nil {
-									<td><input type="checkbox" name="patch_id" value={ fmt.Sprintf("%d", p.ID) }/></td>
+									<td class="checkbox"><input type="checkbox" name="patch_id" value={ fmt.Sprintf("%d", p.ID) }/></td>
 								}
 								<td>
 									<a href={ templ.SafeURL(patchURL(d.Project.Linkname, p.Msgid)) }>
