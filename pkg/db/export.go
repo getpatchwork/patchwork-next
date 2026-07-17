@@ -105,10 +105,13 @@ func Export(ctx context.Context, database *bun.DB, w io.Writer, target string) e
 	fmt.Fprint(w, "BEGIN;\n")
 	writeDisableConstraints(w, d)
 
-	// Clear seeded data so the imported rows don't conflict with
-	// defaults inserted by "pw db sync".
-	fmt.Fprint(w, "DELETE FROM tag;\n")
-	fmt.Fprint(w, "DELETE FROM state;\n")
+	for i := len(exportTables) - 1; i >= 0; i-- {
+		var stmt []byte
+		stmt = append(stmt, "DELETE FROM "...)
+		stmt = appendName(stmt, exportTables[i].dstName, d)
+		stmt = append(stmt, ";\n"...)
+		w.Write(stmt)
+	}
 
 	writeRows := func(ctx context.Context, database *bun.DB, w io.Writer, srcTable, dstTable string) error {
 		return exportTableRows(ctx, database, w, srcTable, dstTable, d)
