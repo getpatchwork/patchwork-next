@@ -56,8 +56,10 @@ templ patchListPage(d patchListData) {
 			{ intStr(d.Total) } patches
 			{ " | " }
 			<a href={ templ.SafeURL("/project/" + d.Project.Linkname + "/bundles/") }>Bundles</a>
+			{ " | " }
+			<button type="button" id="toggle-toolbar">Filters &amp; Actions &#9662;</button>
 		</patch-count>
-		<patch-filters>
+		<patch-filters class="toolbar" style="display:none">
 			<form method="get" action={ templ.SafeURL("/project/" + d.Project.Linkname + "/list") }>
 				<select name="state" title="State">
 					<option value="*">Action required</option>
@@ -86,7 +88,7 @@ templ patchListPage(d patchListData) {
 		<form method="post" action={ templ.SafeURL("/project/" + d.Project.Linkname + "/list/") }>
 			<input type="hidden" name="csrftoken" value={ d.PC.CSRFToken }/>
 			if d.PC.User != nil {
-				<patch-actions>
+				<patch-actions class="toolbar" style="display:none">
 					<select name="change_state" title="Change state">
 						<option value="">Change state...</option>
 						for _, s := range d.States {
@@ -231,6 +233,17 @@ templ patchListPage(d patchListData) {
 		if d.TotalPages > 1 {
 			@pagination(d.Page, d.TotalPages, d.BaseQuery)
 		}
+		<script>
+			(function() {
+				var btn = document.getElementById("toggle-toolbar");
+				var els = document.querySelectorAll(".toolbar");
+				btn.addEventListener("click", function() {
+					var show = els[0].style.display === "none";
+					els.forEach(function(el) { el.style.display = show ? "" : "none"; });
+					btn.innerHTML = show ? "Filters &amp; Actions &#9652;" : "Filters &amp; Actions &#9662;";
+				});
+			})();
+		</script>
 	}
 }
 
