@@ -132,14 +132,7 @@ templ patchListPage(d patchListData) {
 							}
 							@sortHeader("Patch", "name", d)
 							<th>Series</th>
-							<th>
-								for i, a := range d.TagAbbrevs {
-									if i > 0 {
-										{ "/" }
-									}
-									{ a }
-								}
-							</th>
+							<th>{ strings.Join(d.TagAbbrevs, "/") }</th>
 							<th><span title="Success / Warning / Fail">S/W/F</span></th>
 							@sortHeader("Date", "date", d)
 							@sortHeader("Submitter", "submitter", d)
