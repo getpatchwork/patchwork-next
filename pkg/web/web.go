@@ -19,6 +19,7 @@ import (
 	"regexp"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
@@ -36,6 +37,12 @@ func NewRouter(cfg *config.Config, database *bun.DB, bus db.EventBus, version st
 	r := chi.NewRouter()
 	r.Use(middleware.Recoverer)
 	r.Use(middleware.StripSlashes)
+	if t := cfg.Http.SlowRequest.Duration(); t > 0 {
+		r.Use(slowRequestLogger(t))
+	}
+	if t := cfg.Http.SlowQuery.Duration(); t > 0 {
+		database.AddQueryHook(db.NewSlowQueryHook(t))
+	}
 	r.Use(db.Middleware(database, bus))
 
 	csrfKey := make([]byte, 32)
@@ -270,6 +277,20 @@ func coverMessage(c db.Cover) string {
 
 func isURL(s string) bool {
 	return strings.HasPrefix(s, "http://") || strings.HasPrefix(s, "https://")
+}
+
+func slowRequestLogger(threshold time.Duration) func(http.Handler) http.Handler {
+	return func(next http.Handler) http.Handler {
+		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			start := time.Now()
+			next.ServeHTTP(w, r)
+			dur := time.Since(start)
+			if dur >= threshold {
+				log.Warnf("slow request (%s): %s %s",
+					dur.Round(time.Millisecond), r.Method, r.URL.Path)
+			}
+		})
+	}
 }
 
 func readOptionalFile(path string) string {

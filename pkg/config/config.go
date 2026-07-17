@@ -31,11 +31,13 @@ type IngressConfig struct {
 }
 
 type HttpConfig struct {
-	BaseURL    string `help:"Base URL of the patchwork instance."`
-	Listen     string `help:"HTTP listen address." default:"127.0.0.1:8080"`
-	CustomCSS  string `help:"Path to a custom CSS file served after the built-in stylesheet." type:"existingfile"`
-	NavHTML    string `help:"Path to an HTML file whose content is inserted in the navigation bar." type:"existingfile"`
-	FooterHTML string `help:"Path to an HTML file whose content is inserted in the footer." type:"existingfile"`
+	BaseURL     string   `help:"Base URL of the patchwork instance."`
+	Listen      string   `help:"HTTP listen address." default:"127.0.0.1:8080"`
+	SlowRequest Duration `help:"Log HTTP requests slower than this threshold."`
+	SlowQuery   Duration `help:"Log SQL queries slower than this threshold."`
+	CustomCSS   string   `help:"Path to a custom CSS file served after the built-in stylesheet." type:"existingfile"`
+	NavHTML     string   `help:"Path to an HTML file whose content is inserted in the navigation bar." type:"existingfile"`
+	FooterHTML  string   `help:"Path to an HTML file whose content is inserted in the footer." type:"existingfile"`
 }
 
 type SMTPConfig struct {
