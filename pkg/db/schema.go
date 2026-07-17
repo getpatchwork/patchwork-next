@@ -48,7 +48,7 @@ type tableIndex struct {
 }
 
 func (idx *tableIndex) create(model any, ctx context.Context, database bun.IDB) error {
-	c := database.NewCreateIndex().Model(model).Column(idx.columns...)
+	c := database.NewCreateIndex().Model(model)
 	var tokens []string
 	if idx.unique {
 		c = c.Unique()
@@ -57,7 +57,16 @@ func (idx *tableIndex) create(model any, ctx context.Context, database bun.IDB) 
 		tokens = append(tokens, "idx")
 	}
 	tokens = append(tokens, c.GetTableName())
-	tokens = append(tokens, idx.columns...)
+	for _, col := range idx.columns {
+		upper := strings.ToUpper(col)
+		if strings.HasSuffix(upper, " DESC") || strings.HasSuffix(upper, " ASC") {
+			c = c.ColumnExpr(col)
+		} else {
+			c = c.Column(col)
+		}
+		name := strings.ReplaceAll(strings.ToLower(col), " ", "_")
+		tokens = append(tokens, name)
+	}
 	name := strings.Join(tokens, "_")
 	_, err := c.Index(name).Exec(ctx)
 	return err

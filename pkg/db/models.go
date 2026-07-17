@@ -173,7 +173,7 @@ type SeriesMetadata struct {
 
 	ID       int    `bun:"id,pk,autoincrement"`
 	SeriesID int    `bun:"series_id,notnull" fk:"series.id,cascade"`
-	Key      string `bun:"key,notnull" index:""`
+	Key      string `bun:"key,notnull"`
 	Value    string `bun:"value,notnull"`
 }
 
@@ -207,11 +207,11 @@ type SeriesRef struct {
 }
 
 type Patch struct {
-	bun.BaseModel `bun:"table:patch" unique:"msgid,project_id;series_id,number" index:"archived,state_id,delegate_id,date,project_id,submitter_id,name" json:"-"`
+	bun.BaseModel `bun:"table:patch" unique:"msgid,project_id;series_id,number" index:"archived,state_id,delegate_id,date,project_id,submitter_id,name;project_id,archived,date DESC" json:"-"`
 
 	ID          int       `bun:"id,pk,autoincrement" json:"id"`
 	Msgid       string    `bun:"msgid,notnull" json:"msgid"`
-	Date        time.Time `bun:"date,notnull" json:"date" index:""`
+	Date        time.Time `bun:"date,notnull" json:"date"`
 	Headers     string    `bun:"headers,notnull" json:"headers,omitempty"`
 	SubmitterID int       `bun:"submitter_id,notnull" json:"-" fk:"person.id"`
 	Content     *string   `bun:"content" json:"content,omitempty"`
@@ -280,7 +280,7 @@ type PatchRelation struct {
 }
 
 type Cover struct {
-	bun.BaseModel `bun:"table:cover" unique:"msgid,project_id" index:"date,project_id,submitter_id,name" json:"-"`
+	bun.BaseModel `bun:"table:cover" unique:"msgid,project_id" json:"-"`
 
 	ID          int       `bun:"id,pk,autoincrement" json:"id"`
 	Msgid       string    `bun:"msgid,notnull" json:"msgid"`
@@ -356,7 +356,7 @@ type Check struct {
 	Date        time.Time  `bun:"date,notnull" json:"date"`
 	State       CheckState `bun:"state,notnull" json:"state"`
 	TargetURL   string     `bun:"target_url,notnull" json:"target_url"`
-	Context     string     `bun:"context,notnull" json:"context" index:""`
+	Context     string     `bun:"context,notnull" json:"context"`
 	Description string     `bun:"description,notnull" json:"description"`
 
 	User *User  `bun:"rel:belongs-to,join:user_id=id" json:"user,omitempty"`
@@ -406,7 +406,7 @@ type Event struct {
 
 	ID                 int       `bun:"id,pk,autoincrement" json:"id"`
 	ProjectID          int       `bun:"project_id,notnull" json:"-" fk:"project.id,cascade"`
-	Category           string    `bun:"category,notnull" json:"category" index:""`
+	Category           string    `bun:"category,notnull" json:"category"`
 	Date               time.Time `bun:"date,notnull" json:"date"`
 	ActorID            *int      `bun:"actor_id" json:"-" fk:"auth_user.id,setnull"`
 	PatchID            *int      `bun:"patch_id" json:"-" fk:"patch.id,cascade"`
