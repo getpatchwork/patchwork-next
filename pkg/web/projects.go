@@ -57,5 +57,14 @@ func (h *webHandler) ProjectDetail(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	projectDetailPage(h.projectPageCtx(r, project), *project, maintainers, nPatches).Render(ctx, w)
+	nArchived, err := q.DB.NewSelect().Model((*db.Patch)(nil)).
+		Where("project_id = ?", project.ID).
+		Where("archived = ?", true).
+		Count(q.Ctx)
+	if err != nil {
+		serverErrorPage(w, "count archived", err)
+		return
+	}
+
+	projectDetailPage(h.projectPageCtx(r, project), *project, maintainers, nPatches, nArchived).Render(ctx, w)
 }

@@ -104,6 +104,68 @@ main {
 	padding: 0.5em 1em;
 }
 
+/* --- project grid --- */
+project-grid {
+	display: grid;
+	grid-template-columns: repeat(3, 1fr);
+	gap: 1.5em;
+	padding: 1em 0;
+}
+project-card {
+	display: block;
+	border: 1px solid #ddd;
+	border-radius: 4px;
+	padding: 1.2em 1.5em;
+}
+project-card h3 {
+	margin: 0 0 0.4em 0;
+	font-size: 1.5em;
+	font-weight: normal;
+}
+project-card p {
+	margin: 0.3em 0;
+}
+
+/* --- patch detail columns --- */
+patch-columns {
+	display: flex;
+	gap: 1em;
+	align-items: flex-start;
+}
+patch-columns > form {
+	flex: 1;
+	min-width: 0;
+}
+patch-columns > check-list {
+	flex: 1;
+	min-width: 0;
+}
+check-list {
+	display: block;
+	border: 1px solid #ddd;
+	border-radius: 4px;
+	padding: 5px 0;
+}
+check-list h2 {
+	margin: 0 0.8em 0.3em;
+}
+check-list table {
+	border-collapse: collapse;
+	width: 100%;
+}
+check-list th {
+	padding: 3px 0.8em;
+	border-bottom: 2px solid #ddd;
+	text-align: left;
+	background: #f5f5f5;
+}
+check-list td {
+	padding: 3px 0.8em;
+	border-top: 1px solid #e8e8e8;
+	white-space: nowrap;
+}
+check-list tbody tr:nth-child(odd) { background: #f9f9f9; }
+
 /* --- filter bar --- */
 patch-count {
 	display: block;
@@ -231,9 +293,16 @@ fieldset legend {
 }
 
 /* --- checks --- */
-check-ok { color: #82ca9d; }
-check-warn { color: #ffc95e; }
-check-fail { color: #ff5555; }
+check-ok, check-warn, check-fail {
+	display: inline-block;
+	padding: 0 4px;
+	border-radius: 6px;
+	font-weight: bold;
+	color: #fff;
+}
+check-ok { background: #5cb85c; }
+check-warn { background: #f0ad4e; }
+check-fail { background: #d9534f; }
 
 /* --- download links --- */
 title-bar {

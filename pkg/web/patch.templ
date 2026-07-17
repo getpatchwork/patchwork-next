@@ -53,10 +53,14 @@ templ patchDetailPage(d patchDetailData) {
 		{Label: "Patches", URL: "/project/" + d.Project.Linkname + "/list/"},
 		{Label: truncate(d.Patch.Name, 72)},
 	}, d.PC) {
+		<title-bar>
+			<h1>{ d.Patch.Name }</h1>
+			@downloadLinks(d.Patch.ID, d.Project.Linkname, d.Patch.Msgid, d.Series)
+		</title-bar>
+		<patch-columns>
 		<form method="post" action={ templ.SafeURL(patchURL(d.Project.Linkname, d.Patch.Msgid)) }>
 			<input type="hidden" name="csrftoken" value={ d.PC.CSRFToken }/>
 			<submission-meta>
-				@downloadLinks(d.Patch.ID, d.Project.Linkname, d.Patch.Msgid, d.Series)
 				<table>
 					<tbody>
 						<tr>
@@ -219,34 +223,37 @@ templ patchDetailPage(d patchDetailData) {
 			</submission-meta>
 		</form>
 		if len(d.Checks) > 0 {
-			<h2>Checks</h2>
-			<table>
-				<thead>
-					<tr>
-						<th>Context</th>
-						<th>Check</th>
-						<th>Description</th>
-					</tr>
-				</thead>
-				<tbody>
-					for _, c := range d.Checks {
+			<check-list>
+				<h2>Checks</h2>
+				<table>
+					<thead>
 						<tr>
-							<td>{ c.Context }</td>
-							<td>
-								@checkState(c.State)
-							</td>
-							<td>
-								if c.TargetURL != "" {
-									<a href={ templ.SafeURL(c.TargetURL) }>{ c.Description }</a>
-								} else {
-									{ c.Description }
-								}
-							</td>
+							<th>Context</th>
+							<th>Check</th>
+							<th>Description</th>
 						</tr>
-					}
-				</tbody>
-			</table>
+					</thead>
+					<tbody>
+						for _, c := range d.Checks {
+							<tr>
+								<td>{ c.Context }</td>
+								<td>
+									@checkState(c.State)
+								</td>
+								<td>
+									if c.TargetURL != "" {
+										<a href={ templ.SafeURL(c.TargetURL) }>{ c.Description }</a>
+									} else {
+										{ c.Description }
+									}
+								</td>
+							</tr>
+						}
+					</tbody>
+				</table>
+			</check-list>
 		}
+		</patch-columns>
 		if len(d.Related) > 0 {
 			<h2>Related</h2>
 			<ul>

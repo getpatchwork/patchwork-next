@@ -5,41 +5,48 @@
 
 package web
 
-import "github.com/getpatchwork/patchwork/pkg/db"
+import (
+	"fmt"
+
+	"github.com/getpatchwork/patchwork/pkg/db"
+)
 
 templ projectListPage(pc pageContext, projects []db.Project) {
 	@layout("Projects", nil, pc) {
-		<h1>Projects</h1>
 		if len(projects) == 0 {
 			<p>No projects found.</p>
 		} else {
-			<div>
+			<project-grid>
 				for _, p := range projects {
-					<article>
-						<header>
-							<a href={ templ.SafeURL("/project/" + p.Linkname + "/list/") }>
+					<project-card>
+						<h3>
+							<a href={ templ.SafeURL("/project/" + p.Linkname) }>
 								{ p.Name }
 							</a>
-						</header>
+						</h3>
 						<p>
 							<a href={ templ.SafeURL("/project/" + p.Linkname + "/list/") }>
 								View patches
 							</a>
 						</p>
 						if p.WebURL != "" {
-							<p><a href={ templ.SafeURL(p.WebURL) }>Website</a></p>
+							<p><a href={ templ.SafeURL(p.WebURL) }>{ p.WebURL }</a></p>
 						}
-					</article>
+						if p.WebScmURL != "" {
+							<p><a href={ templ.SafeURL(p.WebScmURL) }>{ p.WebScmURL }</a></p>
+						}
+					</project-card>
 				}
-			</div>
+			</project-grid>
 		}
 	}
 }
 
-templ projectDetailPage(pc pageContext, project db.Project, maintainers []db.User, nPatches int) {
+templ projectDetailPage(pc pageContext, project db.Project, maintainers []db.User, nPatches int, nArchived int) {
 	@layout(project.Name, []breadcrumb{
 		{Label: project.Name},
 	}, pc) {
+		<h1>About { project.Name }</h1>
 		<submission-meta>
 			<table>
 				<tbody>
@@ -53,22 +60,18 @@ templ projectDetailPage(pc pageContext, project db.Project, maintainers []db.Use
 							<td><a href={ templ.SafeURL(project.ListArchiveURL) }>{ project.ListArchiveURL }</a></td>
 						</tr>
 					}
-					if project.WebURL != "" {
+					if len(maintainers) > 0 {
 						<tr>
-							<th>Website</th>
-							<td><a href={ templ.SafeURL(project.WebURL) }>{ project.WebURL }</a></td>
-						</tr>
-					}
-					if project.ScmURL != "" {
-						<tr>
-							<th>SCM</th>
-							<td>{ project.ScmURL }</td>
-						</tr>
-					}
-					if project.WebScmURL != "" {
-						<tr>
-							<th>Web SCM</th>
-							<td><a href={ templ.SafeURL(project.WebScmURL) }>{ project.WebScmURL }</a></td>
+							<th>Maintainers</th>
+							<td>
+								for _, m := range maintainers {
+									{ m.FirstName } { m.LastName }
+									{ " <" }
+									<a href={ templ.SafeURL("mailto:" + m.Email) }>{ m.Email }</a>
+									{ ">" }
+									<br/>
+								}
+							</td>
 						</tr>
 					}
 					<tr>
@@ -77,19 +80,27 @@ templ projectDetailPage(pc pageContext, project db.Project, maintainers []db.Use
 							<a href={ templ.SafeURL("/project/" + project.Linkname + "/list/") }>
 								{ intStr(nPatches) }
 							</a>
+							if nArchived > 0 {
+								{ fmt.Sprintf(" (+ %d archived)", nArchived) }
+							}
 						</td>
 					</tr>
-					if len(maintainers) > 0 {
+					if project.WebURL != "" {
 						<tr>
-							<th>Maintainers</th>
-							<td>
-								for i, m := range maintainers {
-									if i > 0 {
-										{ ", " }
-									}
-									{ m.FirstName } { m.LastName }
-								}
-							</td>
+							<th>Website</th>
+							<td><a href={ templ.SafeURL(project.WebURL) }>{ project.WebURL }</a></td>
+						</tr>
+					}
+					if project.WebScmURL != "" {
+						<tr>
+							<th>Source Code Web Interface</th>
+							<td><a href={ templ.SafeURL(project.WebScmURL) }>{ project.WebScmURL }</a></td>
+						</tr>
+					}
+					if project.ScmURL != "" {
+						<tr>
+							<th>Source Code Manager URL</th>
+							<td>{ project.ScmURL }</td>
 						</tr>
 					}
 				</tbody>
