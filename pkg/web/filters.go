@@ -21,7 +21,7 @@ func applyWebFilters(ctx context.Context, database bun.IDB, q *bun.SelectQuery, 
 	var filters []appliedFilter
 
 	if v := params.Get("q"); v != "" {
-		q = q.Where("name LIKE ?", "%"+v+"%")
+		q = q.Where("patch.name LIKE ?", "%"+v+"%")
 		filters = append(filters, appliedFilter{
 			Label:     "Search",
 			Value:     v,

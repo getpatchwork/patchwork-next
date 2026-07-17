@@ -683,11 +683,11 @@ func applySort(sq *bun.SelectQuery, sort string) *bun.SelectQuery {
 	}
 
 	colMap := map[string]string{
-		"date":      "date",
-		"name":      "name",
-		"submitter": "submitter_id",
-		"delegate":  "delegate_id",
-		"state":     "state_id",
+		"date":      "patch.date",
+		"name":      "patch.name",
+		"submitter": "patch.submitter_id",
+		"delegate":  "patch.delegate_id",
+		"state":     "patch.state_id",
 	}
 
 	col, ok := colMap[field]

@@ -58,7 +58,7 @@ func (h *webHandler) ProjectBundleList(w http.ResponseWriter, r *http.Request) {
 		ColumnExpr("*, (SELECT count(*) FROM bundle_patch WHERE bundle_id = bundle.id) AS patch_count").
 		Relation("Owner").Relation("Project").
 		Where("project_id = ?", project.ID).
-		OrderExpr("name ASC")
+		OrderExpr("bundle.name ASC")
 
 	user := getWebUser(r)
 	if user != nil {
