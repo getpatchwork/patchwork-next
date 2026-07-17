@@ -110,7 +110,7 @@ func Export(ctx context.Context, database *bun.DB, w io.Writer, target string) e
 		stmt = append(stmt, "DELETE FROM "...)
 		stmt = appendName(stmt, exportTables[i].dstName, d)
 		stmt = append(stmt, ";\n"...)
-		w.Write(stmt)
+		_, _ = w.Write(stmt)
 	}
 
 	writeRows := func(ctx context.Context, database *bun.DB, w io.Writer, srcTable, dstTable string) error {
@@ -131,6 +131,7 @@ func Export(ctx context.Context, database *bun.DB, w io.Writer, target string) e
 		}
 	}
 
+	writeResetSequences(w, d)
 	writeEnableConstraints(w, d)
 	fmt.Fprint(w, "COMMIT;\n")
 	return nil
@@ -152,6 +153,31 @@ func writeEnableConstraints(w io.Writer, d schema.Dialect) {
 	case dialect.SQLite:
 		fmt.Fprint(w, "PRAGMA foreign_keys = ON;\n")
 	}
+}
+
+func writeResetSequences(w io.Writer, d schema.Dialect) {
+	if d.Name() != dialect.PG {
+		return
+	}
+	_, _ = io.WriteString(w, `DO $$
+DECLARE
+    r RECORD;
+BEGIN
+    FOR r IN
+        SELECT c.oid::regclass::text AS tbl,
+               a.attname AS col
+        FROM pg_catalog.pg_class c
+        JOIN pg_catalog.pg_attribute a ON a.attrelid = c.oid
+        WHERE c.relkind = 'r'
+          AND pg_get_serial_sequence(c.oid::regclass::text, a.attname) IS NOT NULL
+    LOOP
+        EXECUTE format(
+            'SELECT setval(pg_get_serial_sequence(%L, %L), coalesce(max(%I), 0) + 1, false) FROM %s',
+            r.tbl, r.col, r.col, r.tbl);
+    END LOOP;
+END
+$$;
+`)
 }
 
 func hasDjangoMigrations(ctx context.Context, database *bun.DB) bool {
