@@ -88,6 +88,11 @@ test:
 .PHONY: lint
 lint:
 	$(GO) generate ./...
+	@echo '[templ fmt]'
+	$Q $(GO) tool templ fmt -fail . 2>&1 || { \
+		echo 'error: templ files need reformatting'; \
+		exit 1; \
+	}
 	@echo '[goimports-reviser]'
 	$Q ! $(GO) run $(import_reviser) $(import_reviser_flags) -list-diff -output stdout ./... | grep . || { \
 		echo 'error: above files need import sorting'; \
@@ -116,6 +121,7 @@ lint:
 
 .PHONY: format
 format:
+	$(GO) tool templ fmt .
 	$(GO) run $(import_reviser) $(import_reviser_flags) ./...
 	$(GO) run $(gofumpt) -w .
 
