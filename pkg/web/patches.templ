@@ -143,51 +143,7 @@ templ patchListPage(d patchListData) {
 					<tbody>
 						for _, p := range d.Patches {
 							<tr>
-								if d.PC.User != nil {
-									<td class="checkbox"><input type="checkbox" name="patch_id" value={ fmt.Sprintf("%d", p.ID) }/></td>
-								}
-								<td>
-									<a href={ templ.SafeURL(patchURL(d.Project.Linkname, p.Msgid)) }>
-										{ truncate(p.Name, 100) }
-									</a>
-								</td>
-								<td>
-									if p.SeriesID != nil {
-										<a href={ templ.SafeURL(fmt.Sprintf("/project/%s/list/?series=%d", d.Project.Linkname, *p.SeriesID)) }>
-											if name, ok := d.SeriesNames[*p.SeriesID]; ok && name != "" {
-												{ truncate(name, 80) }
-											} else {
-												{ fmt.Sprintf("#%d", *p.SeriesID) }
-											}
-										</a>
-									}
-								</td>
-								<td>
-									@tagCounts(d.TagAbbrevs, p.Tags)
-								</td>
-								<td>
-									@checkCounts(p.CheckCounts)
-								</td>
-								<td>{ p.Date.Format("2006-01-02") }</td>
-								<td>
-									if p.Submitter != nil {
-										<a href={ templ.SafeURL(fmt.Sprintf("/project/%s/list/?submitter=%d", d.Project.Linkname, p.SubmitterID)) }>
-											{ personName(p.Submitter) }
-										</a>
-									}
-								</td>
-								<td>
-									if p.Delegate != nil {
-										<a href={ templ.SafeURL(fmt.Sprintf("/project/%s/list/?delegate=%d", d.Project.Linkname, *p.DelegateID)) }>
-											{ p.Delegate.Username }
-										</a>
-									}
-								</td>
-								<td>
-									if p.State != nil {
-										{ p.State.Name }
-									}
-								</td>
+								@patchRow(&d, &p)
 							</tr>
 						}
 						if len(d.Patches) == 0 {
@@ -199,6 +155,20 @@ templ patchListPage(d patchListData) {
 				</table>
 			</patch-list>
 		</form>
+		if d.TotalPages > 1 {
+			@pagination(d.Page, d.TotalPages, d.BaseQuery)
+		}
+		<script>
+			(function() {
+				var btn = document.getElementById("toggle-toolbar");
+				var els = document.querySelectorAll(".toolbar");
+				btn.addEventListener("click", function() {
+					var show = els[0].style.display === "none";
+					els.forEach(function(el) { el.style.display = show ? "" : "none"; });
+					btn.innerHTML = show ? "Filters &amp; Actions &#9652;" : "Filters &amp; Actions &#9662;";
+				});
+			})();
+		</script>
 		if d.PC.User != nil {
 			<script>
 				(function() {
@@ -223,21 +193,57 @@ templ patchListPage(d patchListData) {
 				})();
 			</script>
 		}
-		if d.TotalPages > 1 {
-			@pagination(d.Page, d.TotalPages, d.BaseQuery)
-		}
-		<script>
-			(function() {
-				var btn = document.getElementById("toggle-toolbar");
-				var els = document.querySelectorAll(".toolbar");
-				btn.addEventListener("click", function() {
-					var show = els[0].style.display === "none";
-					els.forEach(function(el) { el.style.display = show ? "" : "none"; });
-					btn.innerHTML = show ? "Filters &amp; Actions &#9652;" : "Filters &amp; Actions &#9662;";
-				});
-			})();
-		</script>
 	}
+}
+
+templ patchRow(d *patchListData, p *db.Patch) {
+	if d.PC.User != nil {
+		<td class="checkbox">
+			<input type="checkbox" name="patch_id" value={ fmt.Sprintf("%d", p.ID) }/>
+		</td>
+	}
+	<td>
+		<a href={ templ.SafeURL(patchURL(d.Project.Linkname, p.Msgid)) }>
+			{ truncate(p.Name, 100) }
+		</a>
+	</td>
+	<td>
+		if p.SeriesID != nil {
+			<a href={ templ.SafeURL(fmt.Sprintf("/project/%s/list/?series=%d", d.Project.Linkname, *p.SeriesID)) }>
+				if name, ok := d.SeriesNames[*p.SeriesID]; ok && name != "" {
+					{ truncate(name, 80) }
+				} else {
+					{ fmt.Sprintf("#%d", *p.SeriesID) }
+				}
+			</a>
+		}
+	</td>
+	<td>
+		@tagCounts(d.TagAbbrevs, p.Tags)
+	</td>
+	<td>
+		@checkCounts(p.CheckCounts)
+	</td>
+	<td>{ p.Date.Format("2006-01-02") }</td>
+	<td>
+		if p.Submitter != nil {
+			<a href={ templ.SafeURL(fmt.Sprintf("/project/%s/list/?submitter=%d", d.Project.Linkname, p.SubmitterID)) }>
+				{ personName(p.Submitter) }
+			</a>
+		}
+	</td>
+	<td>
+		if p.Delegate != nil {
+			<a href={ templ.SafeURL(fmt.Sprintf("/project/%s/list/?delegate=%d", d.Project.Linkname, *p.DelegateID)) }>
+				{ p.Delegate.Username }
+			</a>
+		}
+	</td>
+	<td>
+		if p.State != nil {
+			{ p.State.Name }
+		}
+	</td>
 }
 
 templ tagCounts(abbrevs []string, tags map[string]int) {
