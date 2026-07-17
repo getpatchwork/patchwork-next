@@ -289,16 +289,22 @@ func (h *webHandler) GenerateToken(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	_, _ = q.DB.NewDelete().Model((*db.AuthToken)(nil)).
-		Where("user_id = ?", user.ID).Exec(q.Ctx)
+	if _, err := q.DB.NewDelete().Model((*db.AuthToken)(nil)).
+		Where("user_id = ?", user.ID).Exec(q.Ctx); err != nil {
+		serverErrorPage(w, "delete old token", err)
+		return
+	}
 
 	key := make([]byte, 20)
 	rand.Read(key)
 	token := hex.EncodeToString(key)
 
-	_, _ = q.DB.NewInsert().Model(&db.AuthToken{
+	if _, err := q.DB.NewInsert().Model(&db.AuthToken{
 		Key: token, Created: time.Now(), UserID: user.ID,
-	}).Exec(q.Ctx)
+	}).Exec(q.Ctx); err != nil {
+		serverErrorPage(w, "create token", err)
+		return
+	}
 
 	http.Redirect(w, r, "/user/", http.StatusFound)
 }

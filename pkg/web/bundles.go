@@ -68,7 +68,10 @@ func (h *webHandler) ProjectBundleList(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var bundles []db.Bundle
-	sq.Scan(q.Ctx, &bundles)
+	if err := sq.Scan(q.Ctx, &bundles); err != nil {
+		serverErrorPage(w, "list bundles", err)
+		return
+	}
 
 	bundleListPage(bundleListData{PC: pc, Bundles: bundles}).Render(ctx, w)
 }
@@ -107,13 +110,17 @@ func (h *webHandler) BundleDetail(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var patches []db.Patch
-	q.DB.NewSelect().
+	err = q.DB.NewSelect().
 		Model(&patches).
 		Relation("Submitter").Relation("State").Relation("Delegate").
 		Join("JOIN bundle_patch AS bp ON bp.patch_id = patch.id").
 		Where("bp.bundle_id = ?", bundle.ID).
 		OrderBy("bp.order", bun.OrderAsc).
 		Scan(q.Ctx)
+	if err != nil {
+		serverErrorPage(w, "list bundle patches", err)
+		return
+	}
 
 	populateWebPatchTags(q, patches)
 
@@ -167,21 +174,30 @@ func (h *webHandler) BundleUpdate(w http.ResponseWriter, r *http.Request) {
 
 	switch action {
 	case "delete":
-		_, _ = q.DB.NewDelete().Model((*db.BundlePatch)(nil)).
-			Where("bundle_id = ?", bundle.ID).Exec(q.Ctx)
-		_, _ = q.DB.NewDelete().Model((*db.Bundle)(nil)).
-			Where("id = ?", bundle.ID).Exec(q.Ctx)
+		if _, err := q.DB.NewDelete().Model((*db.BundlePatch)(nil)).
+			Where("bundle_id = ?", bundle.ID).Exec(q.Ctx); err != nil {
+			serverErrorPage(w, "delete bundle patches", err)
+			return
+		}
+		if _, err := q.DB.NewDelete().Model((*db.Bundle)(nil)).
+			Where("id = ?", bundle.ID).Exec(q.Ctx); err != nil {
+			serverErrorPage(w, "delete bundle", err)
+			return
+		}
 		http.Redirect(w, r, "/user/bundles/", http.StatusFound)
 
 	case "update":
 		newName := strings.TrimSpace(r.FormValue("name"))
 		public := r.FormValue("public") == "on"
 		if newName != "" {
-			_, _ = q.DB.NewUpdate().Model(&bundle).
+			if _, err := q.DB.NewUpdate().Model(&bundle).
 				Where("id = ?", bundle.ID).
 				Set("name = ?", newName).
 				Set("public = ?", public).
-				Exec(q.Ctx)
+				Exec(q.Ctx); err != nil {
+				serverErrorPage(w, "update bundle", err)
+				return
+			}
 			http.Redirect(w, r, fmt.Sprintf("/bundle/%s/%s/", username, newName), http.StatusFound)
 		} else {
 			http.Redirect(w, r, fmt.Sprintf("/bundle/%s/%s/", username, bundlename), http.StatusFound)
@@ -193,10 +209,13 @@ func (h *webHandler) BundleUpdate(w http.ResponseWriter, r *http.Request) {
 			if err != nil {
 				continue
 			}
-			_, _ = q.DB.NewDelete().Model((*db.BundlePatch)(nil)).
+			if _, err := q.DB.NewDelete().Model((*db.BundlePatch)(nil)).
 				Where("bundle_id = ?", bundle.ID).
 				Where("patch_id = ?", patchID).
-				Exec(q.Ctx)
+				Exec(q.Ctx); err != nil {
+				serverErrorPage(w, "remove patch from bundle", err)
+				return
+			}
 		}
 		http.Redirect(w, r, fmt.Sprintf("/bundle/%s/%s/", username, bundlename), http.StatusFound)
 

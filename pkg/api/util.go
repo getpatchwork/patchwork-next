@@ -15,6 +15,7 @@ import (
 	"github.com/uptrace/bun"
 
 	"github.com/getpatchwork/patchwork/pkg/db"
+	"github.com/getpatchwork/patchwork/pkg/log"
 )
 
 func strp(s string) *string { return &s }
@@ -58,12 +59,14 @@ func loadProjectMaintainers(ctx context.Context, database bun.IDB, projects []db
 		db.User
 	}
 	var rows []maintainerRow
-	database.NewSelect().
+	if err := database.NewSelect().
 		Model((*db.ProjectMaintainer)(nil)).
 		ColumnExpr("project_maintainer.project_id, u.*").
 		Join("JOIN auth_user AS u ON u.id = project_maintainer.user_id").
 		Where("project_maintainer.project_id IN ?", bun.Tuple(projectIDs)).
-		Scan(ctx, &rows)
+		Scan(ctx, &rows); err != nil {
+		log.Errorf("load project maintainers: %v", err)
+	}
 
 	byProject := make(map[int][]db.User)
 	for _, r := range rows {
@@ -104,12 +107,14 @@ func loadPatchTags(ctx context.Context, database bun.IDB, patches []db.Patch) {
 		Count   int    `bun:"count"`
 	}
 	var rows []tagRow
-	database.NewSelect().
+	if err := database.NewSelect().
 		Model((*db.PatchTag)(nil)).
 		ColumnExpr("patch_tag.patch_id, tag.abbrev, patch_tag.count").
 		Join("JOIN tag ON tag.id = patch_tag.tag_id").
 		Where("patch_tag.patch_id IN ?", bun.Tuple(dedup(ids))).
-		Scan(ctx, &rows)
+		Scan(ctx, &rows); err != nil {
+		log.Errorf("load patch tags: %v", err)
+	}
 
 	tagMap := make(map[int]map[string]int)
 	for _, r := range rows {
@@ -137,9 +142,11 @@ func loadPatchSeries(ctx context.Context, database bun.IDB, patches []db.Patch) 
 	seriesMap := make(map[int]*db.Series)
 	if len(seriesIDs) > 0 {
 		var series []db.Series
-		database.NewSelect().Model(&series).
+		if err := database.NewSelect().Model(&series).
 			Where("id IN ?", bun.Tuple(dedup(seriesIDs))).
-			Scan(ctx)
+			Scan(ctx); err != nil {
+			log.Errorf("load patch series: %v", err)
+		}
 		for i := range series {
 			seriesMap[series[i].ID] = &series[i]
 		}
@@ -168,10 +175,12 @@ func loadPatchRelated(ctx context.Context, database bun.IDB, patches []db.Patch)
 	relatedMap := make(map[int][]db.PatchRef)
 	if len(relatedIDs) > 0 {
 		var related []db.Patch
-		database.NewSelect().Model(&related).
+		if err := database.NewSelect().Model(&related).
 			Column("id", "name", "related_id").
 			Where("related_id IN ?", bun.Tuple(dedup(relatedIDs))).
-			Scan(ctx)
+			Scan(ctx); err != nil {
+			log.Errorf("load patch related: %v", err)
+		}
 		for _, r := range related {
 			if r.RelatedID != nil {
 				relatedMap[*r.RelatedID] = append(relatedMap[*r.RelatedID],
@@ -207,12 +216,14 @@ func loadCombinedCheck(ctx context.Context, database bun.IDB, patches []db.Patch
 		State   int `bun:"state"`
 	}
 	var rows []checkRow
-	database.NewSelect().
+	if err := database.NewSelect().
 		Model((*db.Check)(nil)).
 		Column("patch_id", "state").
 		Distinct().
 		Where("patch_id IN ?", bun.Tuple(dedup(ids))).
-		Scan(ctx, &rows)
+		Scan(ctx, &rows); err != nil {
+		log.Errorf("load combined check: %v", err)
+	}
 
 	statesByPatch := make(map[int][]int)
 	for _, r := range rows {
@@ -253,9 +264,11 @@ func loadCoverSeries(ctx context.Context, database bun.IDB, covers []db.Cover) {
 	}
 
 	var series []db.Series
-	database.NewSelect().Model(&series).
+	if err := database.NewSelect().Model(&series).
 		Where("cover_letter_id IN ?", bun.Tuple(dedup(coverIDs))).
-		Scan(ctx)
+		Scan(ctx); err != nil {
+		log.Errorf("load cover series: %v", err)
+	}
 
 	byCover := make(map[int]*db.Series)
 	for i := range series {
@@ -280,9 +293,12 @@ func loadSeriesDetail(ctx context.Context, database bun.IDB, base string, series
 	for i := range series {
 		s := &series[i]
 
-		count, _ := database.NewSelect().Model((*db.Patch)(nil)).
+		count, err := database.NewSelect().Model((*db.Patch)(nil)).
 			Where("series_id = ?", s.ID).
 			Count(ctx)
+		if err != nil {
+			log.Errorf("count series patches: %v", err)
+		}
 		s.ReceivedTotal = count
 		s.ReceivedAll = count >= int(s.Total)
 
@@ -296,41 +312,49 @@ func loadSeriesDetail(ctx context.Context, database bun.IDB, base string, series
 		}
 
 		var patches []db.Patch
-		database.NewSelect().Model(&patches).
+		if err := database.NewSelect().Model(&patches).
 			Where("series_id = ?", s.ID).
 			OrderExpr("number ASC").
-			Scan(ctx)
+			Scan(ctx); err != nil {
+			log.Errorf("load series patches: %v", err)
+		}
 		if patches == nil {
 			patches = []db.Patch{}
 		}
 		s.Patches = patches
 
 		var meta []db.SeriesMetadata
-		database.NewSelect().Model(&meta).
+		if err := database.NewSelect().Model(&meta).
 			Where("series_id = ?", s.ID).
-			Scan(ctx)
+			Scan(ctx); err != nil {
+			log.Errorf("load series metadata: %v", err)
+		}
 		s.Metadata = make(map[string]string, len(meta))
 		for _, m := range meta {
 			s.Metadata[m.Key] = m.Value
 		}
 
 		var depIDs []int
-		database.NewSelect().
+		if err := database.NewSelect().
 			Model((*db.SeriesDependencies)(nil)).
 			Column("to_series_id").
 			Where("from_series_id = ?", s.ID).
-			Scan(ctx, &depIDs)
+			Scan(ctx, &depIDs); err != nil {
+			log.Errorf("load series dependencies: %v", err)
+		}
 		s.Dependencies = make([]string, len(depIDs))
 		for j, id := range depIDs {
 			s.Dependencies[j] = fmt.Sprintf("%s/series/%d/", base, id)
 		}
 
 		var revIDs []int
-		database.NewSelect().
+		if err := database.NewSelect().
 			Model((*db.SeriesDependencies)(nil)).
 			Column("from_series_id").
 			Where("to_series_id = ?", s.ID).
-			Scan(ctx, &revIDs)
+			Scan(ctx, &revIDs); err != nil {
+			log.Errorf("load series dependents: %v", err)
+		}
 		s.Dependents = make([]string, len(revIDs))
 		for j, id := range revIDs {
 			s.Dependents[j] = fmt.Sprintf("%s/series/%d/", base, id)
@@ -342,11 +366,13 @@ func loadSeriesDetail(ctx context.Context, database bun.IDB, base string, series
 		}
 
 		var nextIDs []int
-		database.NewSelect().
+		if err := database.NewSelect().
 			Model((*db.Series)(nil)).
 			Column("id").
 			Where("previous_series_id = ?", s.ID).
-			Scan(ctx, &nextIDs)
+			Scan(ctx, &nextIDs); err != nil {
+			log.Errorf("load next series: %v", err)
+		}
 		s.NextSeries = make([]string, len(nextIDs))
 		for j, id := range nextIDs {
 			s.NextSeries[j] = fmt.Sprintf("%s/series/%d/", base, id)
@@ -432,11 +458,13 @@ func listArchiveURL(project *db.Project, msgid string) string {
 func loadBundlePatches(ctx context.Context, database bun.IDB, bundles []db.Bundle) {
 	for i := range bundles {
 		var patches []db.Patch
-		database.NewSelect().
+		if err := database.NewSelect().
 			Model(&patches).
 			Join("JOIN bundle_patch AS bp ON bp.patch_id = patch.id").
 			Where("bp.bundle_id = ?", bundles[i].ID).
-			Scan(ctx)
+			Scan(ctx); err != nil {
+			log.Errorf("load bundle patches: %v", err)
+		}
 		if patches == nil {
 			patches = []db.Patch{}
 		}
@@ -465,9 +493,12 @@ func updateRelated(
 			}
 			patch.RelatedID = nil
 
-			remaining, _ := tx.NewSelect().Model((*db.Patch)(nil)).
+			remaining, err := tx.NewSelect().Model((*db.Patch)(nil)).
 				Where("related_id = ?", oldRelID).
 				Count(ctx)
+			if err != nil {
+				log.Errorf("count remaining related: %v", err)
+			}
 			if remaining < 2 {
 				if _, err := tx.NewUpdate().Model((*db.Patch)(nil)).
 					Set("related_id = NULL").

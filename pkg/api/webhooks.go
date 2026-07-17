@@ -14,6 +14,7 @@ import (
 	"github.com/danielgtaylor/huma/v2"
 
 	"github.com/getpatchwork/patchwork/pkg/db"
+	"github.com/getpatchwork/patchwork/pkg/log"
 )
 
 func registerWebhookRoutes(api huma.API, h *handler, prefix string, mw huma.Middlewares) {
@@ -79,10 +80,17 @@ func (h *handler) ListWebhooks(
 	sq := db.GetQueries(ctx).DB.NewSelect().Model((*db.Webhook)(nil)).
 		Where("project_id = ?", input.ProjectID)
 
-	total, _ := sq.Count(ctx)
+	total, err := sq.Count(ctx)
+	if err != nil {
+		log.Errorf("count webhooks: %v", err)
+		return nil, huma.Error500InternalServerError("Internal error.")
+	}
 
 	var hooks []db.Webhook
-	sq.OrderExpr("id ASC").Offset(offset).Limit(perPage).Scan(ctx, &hooks)
+	if err := sq.OrderExpr("id ASC").Offset(offset).Limit(perPage).Scan(ctx, &hooks); err != nil {
+		log.Errorf("list webhooks: %v", err)
+		return nil, huma.Error500InternalServerError("Internal error.")
+	}
 
 	resp := &ListWebhooksOutput{
 		Link: buildLinkHeader(input.Page, perPage, total),
@@ -212,7 +220,10 @@ func (h *handler) UpdateWebhook(
 		return nil, huma.Error400BadRequest("Update failed.")
 	}
 
-	q.DB.NewSelect().Model(&hook).Where("id = ?", input.WebhookID).Scan(ctx)
+	if err := q.DB.NewSelect().Model(&hook).Where("id = ?", input.WebhookID).Scan(ctx); err != nil {
+		log.Errorf("get webhook: %v", err)
+		return nil, huma.Error500InternalServerError("Internal error.")
+	}
 
 	base := h.apiBase(ctx)
 	return &GetWebhookOutput{

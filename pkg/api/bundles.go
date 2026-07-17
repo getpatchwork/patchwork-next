@@ -15,6 +15,7 @@ import (
 	"github.com/uptrace/bun"
 
 	"github.com/getpatchwork/patchwork/pkg/db"
+	"github.com/getpatchwork/patchwork/pkg/log"
 )
 
 func registerBundleRoutes(api huma.API, h *handler, prefix string, mw huma.Middlewares) {
@@ -86,7 +87,11 @@ func (h *handler) ListBundles(
 
 	query = applyBundleFilters(query, input)
 
-	total, _ := query.Count(ctx)
+	total, err := query.Count(ctx)
+	if err != nil {
+		log.Errorf("count bundles: %v", err)
+		return nil, huma.Error500InternalServerError("Internal error.")
+	}
 
 	perPage := input.PerPage
 	if perPage > maxPerPage {
@@ -95,9 +100,12 @@ func (h *handler) ListBundles(
 	offset := (input.Page - 1) * perPage
 
 	var bundles []db.Bundle
-	query.Model(&bundles).
+	if err := query.Model(&bundles).
 		Relation("Owner").Relation("Project").
-		OrderExpr("bundle.id ASC").Offset(offset).Limit(perPage).Scan(ctx)
+		OrderExpr("bundle.id ASC").Offset(offset).Limit(perPage).Scan(ctx); err != nil {
+		log.Errorf("list bundles: %v", err)
+		return nil, huma.Error500InternalServerError("Internal error.")
+	}
 
 	resp := &ListBundlesOutput{
 		Link: buildLinkHeader(input.Page, perPage, total),
@@ -258,9 +266,12 @@ func (h *handler) UpdateBundle(
 		return nil, huma.Error400BadRequest("Update failed.")
 	}
 
-	idb.NewSelect().Model(&bundle).
+	if err := idb.NewSelect().Model(&bundle).
 		Relation("Owner").Relation("Project").
-		Where("bundle.id = ?", input.ID).Scan(ctx)
+		Where("bundle.id = ?", input.ID).Scan(ctx); err != nil {
+		log.Errorf("get bundle: %v", err)
+		return nil, huma.Error500InternalServerError("Internal error.")
+	}
 
 	bundles := []db.Bundle{bundle}
 	loadBundlePatches(ctx, idb, bundles)

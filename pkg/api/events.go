@@ -15,6 +15,7 @@ import (
 	"github.com/uptrace/bun"
 
 	"github.com/getpatchwork/patchwork/pkg/db"
+	"github.com/getpatchwork/patchwork/pkg/log"
 )
 
 func registerEventRoutes(api huma.API, h *handler, prefix string, mw huma.Middlewares) {
@@ -52,7 +53,11 @@ func (h *handler) ListEvents(
 	sq := idb.NewSelect().Model((*db.Event)(nil))
 	sq = applyEventFilters(sq, input)
 
-	total, _ := sq.Count(ctx)
+	total, err := sq.Count(ctx)
+	if err != nil {
+		log.Errorf("count events: %v", err)
+		return nil, huma.Error500InternalServerError("Internal error.")
+	}
 
 	perPage := input.PerPage
 	if perPage > maxPerPage {
@@ -66,8 +71,11 @@ func (h *handler) ListEvents(
 	}
 
 	var events []db.Event
-	sq.Model(&events).Relation("Project").Relation("Actor").
-		OrderExpr(order).Offset(offset).Limit(perPage).Scan(ctx)
+	if err := sq.Model(&events).Relation("Project").Relation("Actor").
+		OrderExpr(order).Offset(offset).Limit(perPage).Scan(ctx); err != nil {
+		log.Errorf("list events: %v", err)
+		return nil, huma.Error500InternalServerError("Internal error.")
+	}
 
 	resp := &ListEventsOutput{
 		Link: buildLinkHeader(input.Page, perPage, total),

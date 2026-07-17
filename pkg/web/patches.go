@@ -54,22 +54,34 @@ func (h *webHandler) PatchList(w http.ResponseWriter, r *http.Request) {
 	}
 	sq = applySort(sq, sort)
 
-	total, _ := sq.Count(q.Ctx)
+	total, err := sq.Count(q.Ctx)
+	if err != nil {
+		serverErrorPage(w, "count patches", err)
+		return
+	}
 	totalPages := (total + perPage - 1) / perPage
 	if page > totalPages && totalPages > 0 {
 		page = totalPages
 	}
 
 	var patches []db.Patch
-	sq.Relation("Submitter").Relation("State").Relation("Delegate").
+	err = sq.Relation("Submitter").Relation("State").Relation("Delegate").
 		Offset((page-1)*perPage).Limit(perPage).Scan(q.Ctx, &patches)
+	if err != nil {
+		serverErrorPage(w, "list patches", err)
+		return
+	}
 
 	populateWebPatchTags(q, patches)
 
 	var tagAbbrevs []string
-	q.DB.NewSelect().Model((*db.Tag)(nil)).Column("abbrev").
+	err = q.DB.NewSelect().Model((*db.Tag)(nil)).Column("abbrev").
 		Where("show_column = ?", true).OrderExpr("id ASC").
 		Scan(q.Ctx, &tagAbbrevs)
+	if err != nil {
+		serverErrorPage(w, "list tags", err)
+		return
+	}
 
 	seriesNames := make(map[int]string)
 	var seriesIDs []int
@@ -109,14 +121,26 @@ func (h *webHandler) PatchList(w http.ResponseWriter, r *http.Request) {
 		bq = "?" + qp.Encode()
 	}
 
-	states, _ := q.ListStates()
+	states, err := q.ListStates()
+	if err != nil {
+		serverErrorPage(w, "list states", err)
+		return
+	}
 
 	var bundles []db.Bundle
 	if user := getWebUser(r); user != nil {
-		bundles, _ = q.ListUserBundles(user.ID)
+		bundles, err = q.ListUserBundles(user.ID)
+		if err != nil {
+			serverErrorPage(w, "list bundles", err)
+			return
+		}
 	}
 
-	delegates, _ := q.ListProjectMaintainers(project.ID)
+	delegates, err := q.ListProjectMaintainers(project.ID)
+	if err != nil {
+		serverErrorPage(w, "list delegates", err)
+		return
+	}
 
 	data := patchListData{
 		PC:          h.projectPageCtx(r, project),
@@ -226,9 +250,12 @@ func (h *webHandler) PatchListAction(w http.ResponseWriter, r *http.Request) {
 				PatchID:  int(patchID),
 				Order:    maxOrder + int(i) + 1,
 			}
-			_, _ = q.DB.NewInsert().Model(&bp).
+			if _, err := q.DB.NewInsert().Model(&bp).
 				On("CONFLICT DO NOTHING").
-				ExcludeColumn("id").Exec(q.Ctx)
+				ExcludeColumn("id").Exec(q.Ctx); err != nil {
+				serverErrorPage(w, "add patch to bundle", err)
+				return
+			}
 		}
 
 	case "create-bundle":
@@ -254,7 +281,10 @@ func (h *webHandler) PatchListAction(w http.ResponseWriter, r *http.Request) {
 				PatchID:  int(patchID),
 				Order:    int(i),
 			}
-			_, _ = q.DB.NewInsert().Model(&bp).ExcludeColumn("id").Exec(q.Ctx)
+			if _, err := q.DB.NewInsert().Model(&bp).ExcludeColumn("id").Exec(q.Ctx); err != nil {
+				serverErrorPage(w, "add patch to bundle", err)
+				return
+			}
 		}
 	}
 
@@ -293,20 +323,32 @@ func (h *webHandler) PatchDetailPage(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	comments, _ := q.ListPatchComments(patch.ID)
+	comments, err := q.ListPatchComments(patch.ID)
+	if err != nil {
+		serverErrorPage(w, "list comments", err)
+		return
+	}
 
 	var checks []db.Check
-	q.DB.NewSelect().Model(&checks).
+	err = q.DB.NewSelect().Model(&checks).
 		Where("patch_id = ?", patch.ID).
 		OrderExpr("date DESC").
 		Scan(q.Ctx)
+	if err != nil {
+		serverErrorPage(w, "list checks", err)
+		return
+	}
 
 	var metadata map[string]string
 	if series != nil {
 		var rows []db.SeriesMetadata
-		q.DB.NewSelect().Model(&rows).
+		err = q.DB.NewSelect().Model(&rows).
 			Where("series_id = ?", series.ID).
 			Scan(q.Ctx)
+		if err != nil {
+			serverErrorPage(w, "list series metadata", err)
+			return
+		}
 		if len(rows) > 0 {
 			metadata = make(map[string]string)
 			for _, r := range rows {
@@ -319,11 +361,15 @@ func (h *webHandler) PatchDetailPage(w http.ResponseWriter, r *http.Request) {
 	var cover *db.Cover
 	if series != nil {
 		var sPatches []db.Patch
-		q.DB.NewSelect().Model(&sPatches).
+		err = q.DB.NewSelect().Model(&sPatches).
 			Column("id", "msgid", "name").
 			Where("series_id = ?", series.ID).
 			OrderBy("number", bun.OrderAsc).
 			Scan(q.Ctx)
+		if err != nil {
+			serverErrorPage(w, "list series patches", err)
+			return
+		}
 		for _, sp := range sPatches {
 			seriesPatches = append(seriesPatches, seriesPatchRef{
 				Name:    sp.Name,
@@ -346,19 +392,31 @@ func (h *webHandler) PatchDetailPage(w http.ResponseWriter, r *http.Request) {
 	var delegates []db.User
 	canEdit := false
 	if user := getWebUser(r); user != nil {
-		states, _ = q.ListStates()
-		delegates, _ = q.ListProjectMaintainers(project.ID)
+		states, err = q.ListStates()
+		if err != nil {
+			serverErrorPage(w, "list states", err)
+			return
+		}
+		delegates, err = q.ListProjectMaintainers(project.ID)
+		if err != nil {
+			serverErrorPage(w, "list delegates", err)
+			return
+		}
 		canEdit = true
 	}
 
 	var related []db.PatchRef
 	if patch.RelatedID != nil {
 		var relPatches []db.Patch
-		q.DB.NewSelect().Model(&relPatches).
+		err = q.DB.NewSelect().Model(&relPatches).
 			Column("id", "name").
 			Where("related_id = ?", *patch.RelatedID).
 			Where("id != ?", patch.ID).
 			Scan(q.Ctx)
+		if err != nil {
+			serverErrorPage(w, "list related patches", err)
+			return
+		}
 		for _, rp := range relPatches {
 			related = append(related, db.PatchRef{ID: rp.ID, Name: rp.Name})
 		}
@@ -452,7 +510,10 @@ func (h *webHandler) PatchUpdate(w http.ResponseWriter, r *http.Request) {
 		uq = uq.Set("delegate_id = ?", delegateID)
 	}
 	uq = uq.Set("archived = ?", r.FormValue("archived") == "true")
-	_, _ = uq.Exec(q.Ctx)
+	if _, err = uq.Exec(q.Ctx); err != nil {
+		serverErrorPage(w, "update patch", err)
+		return
+	}
 
 	if newStateID > 0 && (oldStateID == nil || *oldStateID != newStateID) {
 		var p db.Patch

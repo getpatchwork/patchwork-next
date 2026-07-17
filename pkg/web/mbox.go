@@ -20,6 +20,7 @@ import (
 	"github.com/uptrace/bun"
 
 	"github.com/getpatchwork/patchwork/pkg/db"
+	"github.com/getpatchwork/patchwork/pkg/log"
 )
 
 var (
@@ -217,7 +218,11 @@ func (h *webHandler) PatchMboxPage(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var project db.Project
-	q.DB.NewSelect().Model(&project).Where("id = ?", patch.ProjectID).Scan(q.Ctx)
+	err = q.DB.NewSelect().Model(&project).Where("id = ?", patch.ProjectID).Scan(q.Ctx)
+	if err != nil {
+		serverErrorPage(w, "get project", err)
+		return
+	}
 
 	seriesParam := r.URL.Query().Get("series")
 	if seriesParam != "" {
@@ -263,7 +268,11 @@ func (h *webHandler) CoverMboxPage(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var project db.Project
-	q.DB.NewSelect().Model(&project).Where("id = ?", cover.ProjectID).Scan(q.Ctx)
+	err = q.DB.NewSelect().Model(&project).Where("id = ?", cover.ProjectID).Scan(q.Ctx)
+	if err != nil {
+		serverErrorPage(w, "get project", err)
+		return
+	}
 
 	h.serveCoverMbox(w, cover, project)
 }
@@ -298,14 +307,21 @@ func (h *webHandler) SeriesMbox(w http.ResponseWriter, r *http.Request) {
 
 	var project db.Project
 	if series.ProjectID != nil {
-		q.DB.NewSelect().Model(&project).Where("id = ?", *series.ProjectID).Scan(q.Ctx)
+		if err = q.DB.NewSelect().Model(&project).Where("id = ?", *series.ProjectID).Scan(q.Ctx); err != nil {
+			serverErrorPage(w, "get project", err)
+			return
+		}
 	}
 
 	var patches []db.Patch
-	q.DB.NewSelect().Model(&patches).
+	err = q.DB.NewSelect().Model(&patches).
 		Where("series_id = ?", series.ID).
 		OrderBy("number", bun.OrderAsc).
 		Scan(ctx)
+	if err != nil {
+		serverErrorPage(w, "list series patches", err)
+		return
+	}
 
 	var parts []string
 	for _, p := range patches {
@@ -398,15 +414,22 @@ func (h *webHandler) BundleMbox(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var project db.Project
-	q.DB.NewSelect().Model(&project).Where("id = ?", bundle.ProjectID).Scan(q.Ctx)
+	if err = q.DB.NewSelect().Model(&project).Where("id = ?", bundle.ProjectID).Scan(q.Ctx); err != nil {
+		serverErrorPage(w, "get project", err)
+		return
+	}
 
 	var patches []db.Patch
-	q.DB.NewSelect().
+	err = q.DB.NewSelect().
 		Model(&patches).
 		Join("JOIN bundle_patch AS bp ON bp.patch_id = patch.id").
 		Where("bp.bundle_id = ?", bundle.ID).
 		OrderBy("bp.order", bun.OrderAsc).
 		Scan(ctx)
+	if err != nil {
+		serverErrorPage(w, "list bundle patches", err)
+		return
+	}
 
 	var parts []string
 	for _, p := range patches {
@@ -519,15 +542,19 @@ func (h *webHandler) buildMboxSubmission(
 	// load comment contents for tag extraction
 	if isPatch {
 		var contents []string
-		q.DB.NewSelect().Model((*db.PatchComment)(nil)).Column("content").
+		if err := q.DB.NewSelect().Model((*db.PatchComment)(nil)).Column("content").
 			Where("patch_id = ?", patchID).OrderExpr("date ASC").
-			Scan(ctx, &contents)
+			Scan(ctx, &contents); err != nil {
+			log.Errorf("load patch comments: %v", err)
+		}
 		sub.CommentContents = contents
 	} else {
 		var contents []string
-		q.DB.NewSelect().Model((*db.CoverComment)(nil)).Column("content").
+		if err := q.DB.NewSelect().Model((*db.CoverComment)(nil)).Column("content").
 			Where("cover_id = ?", patchID).OrderExpr("date ASC").
-			Scan(ctx, &contents)
+			Scan(ctx, &contents); err != nil {
+			log.Errorf("load cover comments: %v", err)
+		}
 		sub.CommentContents = contents
 	}
 

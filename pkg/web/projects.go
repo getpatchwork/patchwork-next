@@ -17,7 +17,11 @@ func (h *webHandler) ProjectList(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	q := db.GetQueries(ctx)
 
-	projects, _ := q.ListProjects()
+	projects, err := q.ListProjects()
+	if err != nil {
+		serverErrorPage(w, "list projects", err)
+		return
+	}
 	if len(projects) == 1 {
 		http.Redirect(w, r,
 			"/project/"+projects[0].Linkname+"/list/",
@@ -38,13 +42,20 @@ func (h *webHandler) ProjectDetail(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	maintainers, _ := q.ListProjectMaintainers(project.ID)
+	maintainers, err := q.ListProjectMaintainers(project.ID)
+	if err != nil {
+		serverErrorPage(w, "list maintainers", err)
+		return
+	}
 
-	var nPatches int
-	nPatches, _ = q.DB.NewSelect().Model((*db.Patch)(nil)).
+	nPatches, err := q.DB.NewSelect().Model((*db.Patch)(nil)).
 		Where("project_id = ?", project.ID).
 		Where("archived = ?", false).
 		Count(q.Ctx)
+	if err != nil {
+		serverErrorPage(w, "count patches", err)
+		return
+	}
 
 	projectDetailPage(h.projectPageCtx(r, project), *project, maintainers, nPatches).Render(ctx, w)
 }

@@ -15,6 +15,7 @@ import (
 	"github.com/uptrace/bun"
 
 	"github.com/getpatchwork/patchwork/pkg/db"
+	"github.com/getpatchwork/patchwork/pkg/log"
 )
 
 func registerCoverRoutes(api huma.API, h *handler, prefix string, mw huma.Middlewares) {
@@ -55,7 +56,11 @@ func (h *handler) ListCovers(
 	sq := idb.NewSelect().Model((*db.Cover)(nil))
 	sq = applyCoverFilters(sq, input)
 
-	total, _ := sq.Count(ctx)
+	total, err := sq.Count(ctx)
+	if err != nil {
+		log.Errorf("count covers: %v", err)
+		return nil, huma.Error500InternalServerError("Internal error.")
+	}
 
 	perPage := input.PerPage
 	if perPage > maxPerPage {
@@ -64,9 +69,12 @@ func (h *handler) ListCovers(
 	offset := (input.Page - 1) * perPage
 
 	var covers []db.Cover
-	sq.Model(&covers).
+	if err := sq.Model(&covers).
 		Relation("Submitter").Relation("Project").
-		OrderExpr("cover.id DESC").Offset(offset).Limit(perPage).Scan(ctx)
+		OrderExpr("cover.id DESC").Offset(offset).Limit(perPage).Scan(ctx); err != nil {
+		log.Errorf("list covers: %v", err)
+		return nil, huma.Error500InternalServerError("Internal error.")
+	}
 	loadCoverSeries(ctx, idb, covers)
 
 	resp := &ListCoversOutput{

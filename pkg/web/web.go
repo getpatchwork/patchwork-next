@@ -304,3 +304,8 @@ func notFoundPage(w http.ResponseWriter) {
 	w.WriteHeader(http.StatusNotFound)
 	_, _ = w.Write([]byte("Not found"))
 }
+
+func serverErrorPage(w http.ResponseWriter, msg string, err error) {
+	log.ErrLogger().Output(3, fmt.Sprintf("%s: %v", msg, err))
+	http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+}

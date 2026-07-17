@@ -53,11 +53,15 @@ func (h *webHandler) CoverDetailPage(w http.ResponseWriter, r *http.Request) {
 
 	if series != nil {
 		var sPatches []db.Patch
-		q.DB.NewSelect().Model(&sPatches).
+		err = q.DB.NewSelect().Model(&sPatches).
 			Column("id", "msgid", "name").
 			Where("series_id = ?", series.ID).
 			OrderBy("number", bun.OrderAsc).
 			Scan(q.Ctx)
+		if err != nil {
+			serverErrorPage(w, "list series patches", err)
+			return
+		}
 		for _, sp := range sPatches {
 			seriesPatches = append(seriesPatches, seriesPatchRef{
 				Name: sp.Name,
@@ -66,15 +70,23 @@ func (h *webHandler) CoverDetailPage(w http.ResponseWriter, r *http.Request) {
 		}
 
 		var rows []db.SeriesMetadata
-		q.DB.NewSelect().Model(&rows).
+		err = q.DB.NewSelect().Model(&rows).
 			Where("series_id = ?", series.ID).
 			Scan(q.Ctx)
+		if err != nil {
+			serverErrorPage(w, "list series metadata", err)
+			return
+		}
 		for _, r := range rows {
 			metadata[r.Key] = r.Value
 		}
 	}
 
-	comments, _ := q.ListCoverComments(cover.ID)
+	comments, err := q.ListCoverComments(cover.ID)
+	if err != nil {
+		serverErrorPage(w, "list comments", err)
+		return
+	}
 
 	data := coverDetailData{
 		PC:       h.projectPageCtx(r, project),

@@ -14,6 +14,7 @@ import (
 	"github.com/danielgtaylor/huma/v2"
 
 	"github.com/getpatchwork/patchwork/pkg/db"
+	"github.com/getpatchwork/patchwork/pkg/log"
 )
 
 func registerProjectRoutes(api huma.API, h *handler, prefix string, mw huma.Middlewares) {
@@ -112,7 +113,11 @@ func (h *handler) ListProjects(
 		sq = sq.Where("name LIKE ?", "%"+input.Q+"%")
 	}
 
-	total, _ := sq.Count(ctx)
+	total, err := sq.Count(ctx)
+	if err != nil {
+		log.Errorf("count projects: %v", err)
+		return nil, huma.Error500InternalServerError("Internal error.")
+	}
 
 	perPage := input.PerPage
 	if perPage > maxPerPage {
@@ -121,7 +126,10 @@ func (h *handler) ListProjects(
 	offset := (input.Page - 1) * perPage
 
 	var projects []db.Project
-	sq.OrderExpr("id ASC").Offset(offset).Limit(perPage).Scan(ctx, &projects)
+	if err := sq.OrderExpr("id ASC").Offset(offset).Limit(perPage).Scan(ctx, &projects); err != nil {
+		log.Errorf("list projects: %v", err)
+		return nil, huma.Error500InternalServerError("Internal error.")
+	}
 	loadProjectMaintainers(ctx, idb, projects)
 
 	resp := &ListProjectsOutput{
@@ -204,7 +212,10 @@ func (h *handler) UpdateProject(
 		return nil, huma.Error400BadRequest("Update failed.")
 	}
 
-	q.DB.NewSelect().Model(&project).Where("id = ?", project.ID).Scan(ctx)
+	if err := q.DB.NewSelect().Model(&project).Where("id = ?", project.ID).Scan(ctx); err != nil {
+		log.Errorf("get project: %v", err)
+		return nil, huma.Error500InternalServerError("Internal error.")
+	}
 	projects := []db.Project{project}
 	loadProjectMaintainers(ctx, q.DB, projects)
 

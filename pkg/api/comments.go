@@ -13,6 +13,7 @@ import (
 	"github.com/danielgtaylor/huma/v2"
 
 	"github.com/getpatchwork/patchwork/pkg/db"
+	"github.com/getpatchwork/patchwork/pkg/log"
 )
 
 func registerCommentRoutes(api huma.API, h *handler, prefix string, mw huma.Middlewares) {
@@ -70,7 +71,11 @@ func (h *handler) ListPatchComments(
 	q := db.GetQueries(ctx).DB.NewSelect().Model((*db.PatchComment)(nil)).
 		Where("patch_comment.patch_id = ?", input.ID)
 
-	total, _ := q.Count(ctx)
+	total, err := q.Count(ctx)
+	if err != nil {
+		log.Errorf("count patch comments: %v", err)
+		return nil, huma.Error500InternalServerError("Internal error.")
+	}
 
 	perPage := input.PerPage
 	if perPage > maxPerPage {
@@ -79,8 +84,11 @@ func (h *handler) ListPatchComments(
 	offset := (input.Page - 1) * perPage
 
 	var comments []db.PatchComment
-	q.Model(&comments).Relation("Submitter").
-		OrderExpr("patch_comment.id ASC").Offset(offset).Limit(perPage).Scan(ctx)
+	if err := q.Model(&comments).Relation("Submitter").
+		OrderExpr("patch_comment.id ASC").Offset(offset).Limit(perPage).Scan(ctx); err != nil {
+		log.Errorf("list patch comments: %v", err)
+		return nil, huma.Error500InternalServerError("Internal error.")
+	}
 	populateCommentURLs(base, input.ID, comments)
 
 	resp := &ListPatchCommentsOutput{
@@ -206,7 +214,11 @@ func (h *handler) ListCoverComments(
 	q := db.GetQueries(ctx).DB.NewSelect().Model((*db.CoverComment)(nil)).
 		Where("cover_comment.cover_id = ?", input.ID)
 
-	total, _ := q.Count(ctx)
+	total, err := q.Count(ctx)
+	if err != nil {
+		log.Errorf("count cover comments: %v", err)
+		return nil, huma.Error500InternalServerError("Internal error.")
+	}
 
 	perPage := input.PerPage
 	if perPage > maxPerPage {
@@ -215,8 +227,11 @@ func (h *handler) ListCoverComments(
 	offset := (input.Page - 1) * perPage
 
 	var comments []db.CoverComment
-	q.Model(&comments).Relation("Submitter").
-		OrderExpr("cover_comment.id ASC").Offset(offset).Limit(perPage).Scan(ctx)
+	if err := q.Model(&comments).Relation("Submitter").
+		OrderExpr("cover_comment.id ASC").Offset(offset).Limit(perPage).Scan(ctx); err != nil {
+		log.Errorf("list cover comments: %v", err)
+		return nil, huma.Error500InternalServerError("Internal error.")
+	}
 	populateCoverCommentURLs(base, input.ID, comments)
 
 	resp := &ListCoverCommentsOutput{

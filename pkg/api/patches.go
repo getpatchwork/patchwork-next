@@ -17,6 +17,7 @@ import (
 
 	"github.com/getpatchwork/patchwork/pkg/db"
 	"github.com/getpatchwork/patchwork/pkg/events"
+	"github.com/getpatchwork/patchwork/pkg/log"
 )
 
 func registerPatchRoutes(api huma.API, h *handler, prefix string, mw huma.Middlewares) {
@@ -73,7 +74,11 @@ func (h *handler) ListPatches(
 	sq := idb.NewSelect().Model((*db.Patch)(nil))
 	sq = applyPatchFilters(sq, input)
 
-	total, _ := sq.Count(ctx)
+	total, err := sq.Count(ctx)
+	if err != nil {
+		log.Errorf("count patches: %v", err)
+		return nil, huma.Error500InternalServerError("Internal error.")
+	}
 
 	perPage := input.PerPage
 	if perPage > maxPerPage {
@@ -82,9 +87,12 @@ func (h *handler) ListPatches(
 	offset := (input.Page - 1) * perPage
 
 	var patches []db.Patch
-	sq.Model(&patches).
+	if err := sq.Model(&patches).
 		Relation("Submitter").Relation("Project").Relation("State").Relation("Delegate").
-		OrderExpr("patch.id DESC").Offset(offset).Limit(perPage).Scan(ctx)
+		OrderExpr("patch.id DESC").Offset(offset).Limit(perPage).Scan(ctx); err != nil {
+		log.Errorf("list patches: %v", err)
+		return nil, huma.Error500InternalServerError("Internal error.")
+	}
 	loadPatchTags(ctx, idb, patches)
 	loadPatchSeries(ctx, idb, patches)
 	loadCombinedCheck(ctx, idb, patches)

@@ -14,6 +14,7 @@ import (
 	"github.com/uptrace/bun"
 
 	"github.com/getpatchwork/patchwork/pkg/db"
+	"github.com/getpatchwork/patchwork/pkg/log"
 )
 
 func registerUserRoutes(api huma.API, h *handler, prefix string, mw huma.Middlewares) {
@@ -72,7 +73,11 @@ func (h *handler) ListUsers(
 		})
 	}
 
-	total, _ := sq.Count(ctx)
+	total, err := sq.Count(ctx)
+	if err != nil {
+		log.Errorf("count users: %v", err)
+		return nil, huma.Error500InternalServerError("Internal error.")
+	}
 
 	perPage := input.PerPage
 	if perPage > maxPerPage {
@@ -81,7 +86,10 @@ func (h *handler) ListUsers(
 	offset := (input.Page - 1) * perPage
 
 	var users []db.User
-	sq.OrderExpr("id ASC").Offset(offset).Limit(perPage).Scan(ctx, &users)
+	if err := sq.OrderExpr("id ASC").Offset(offset).Limit(perPage).Scan(ctx, &users); err != nil {
+		log.Errorf("list users: %v", err)
+		return nil, huma.Error500InternalServerError("Internal error.")
+	}
 
 	resp := &ListUsersOutput{
 		Link: buildLinkHeader(input.Page, perPage, total),

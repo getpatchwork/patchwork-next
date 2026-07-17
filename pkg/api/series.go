@@ -15,6 +15,7 @@ import (
 	"github.com/uptrace/bun"
 
 	"github.com/getpatchwork/patchwork/pkg/db"
+	"github.com/getpatchwork/patchwork/pkg/log"
 )
 
 func registerSeriesRoutes(api huma.API, h *handler, prefix string, mw huma.Middlewares) {
@@ -61,7 +62,11 @@ func (h *handler) ListSeries(
 	sq := idb.NewSelect().Model((*db.Series)(nil))
 	sq = applySeriesFilters(sq, input)
 
-	total, _ := sq.Count(ctx)
+	total, err := sq.Count(ctx)
+	if err != nil {
+		log.Errorf("count series: %v", err)
+		return nil, huma.Error500InternalServerError("Internal error.")
+	}
 
 	perPage := input.PerPage
 	if perPage > maxPerPage {
@@ -70,9 +75,12 @@ func (h *handler) ListSeries(
 	offset := (input.Page - 1) * perPage
 
 	var series []db.Series
-	sq.Model(&series).
+	if err := sq.Model(&series).
 		Relation("Submitter").Relation("Project").
-		OrderExpr("series.id DESC").Offset(offset).Limit(perPage).Scan(ctx)
+		OrderExpr("series.id DESC").Offset(offset).Limit(perPage).Scan(ctx); err != nil {
+		log.Errorf("list series: %v", err)
+		return nil, huma.Error500InternalServerError("Internal error.")
+	}
 
 	loadSeriesDetail(ctx, idb, base, series)
 

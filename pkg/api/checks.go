@@ -14,6 +14,7 @@ import (
 	"github.com/danielgtaylor/huma/v2"
 
 	"github.com/getpatchwork/patchwork/pkg/db"
+	"github.com/getpatchwork/patchwork/pkg/log"
 )
 
 var checkStates = map[string]db.CheckState{
@@ -72,9 +73,13 @@ func (h *handler) ListChecks(
 	idb := db.GetQueries(ctx).DB
 	base := h.apiBase(ctx)
 
-	total, _ := idb.NewSelect().Model((*db.Check)(nil)).
+	total, err := idb.NewSelect().Model((*db.Check)(nil)).
 		Where("patch_id = ?", input.PatchID).
 		Count(ctx)
+	if err != nil {
+		log.Errorf("count checks: %v", err)
+		return nil, huma.Error500InternalServerError("Internal error.")
+	}
 
 	perPage := input.PerPage
 	if perPage > maxPerPage {
@@ -83,10 +88,13 @@ func (h *handler) ListChecks(
 	offset := (input.Page - 1) * perPage
 
 	var checks []db.Check
-	idb.NewSelect().Model(&checks).
+	if err := idb.NewSelect().Model(&checks).
 		Relation("User").
 		Where(`ci_check.patch_id = ?`, input.PatchID).
-		OrderExpr(`ci_check.id ASC`).Offset(offset).Limit(perPage).Scan(ctx)
+		OrderExpr(`ci_check.id ASC`).Offset(offset).Limit(perPage).Scan(ctx); err != nil {
+		log.Errorf("list checks: %v", err)
+		return nil, huma.Error500InternalServerError("Internal error.")
+	}
 	setCheckURLs(base, input.PatchID, checks)
 
 	resp := &ListChecksOutput{
@@ -300,8 +308,11 @@ func (h *handler) UpdateCheck(
 	})
 
 	// re-fetch
-	q.DB.NewSelect().Model(&check).Relation("User").
-		Where("ci_check.id = ?", check.ID).Scan(ctx)
+	if err := q.DB.NewSelect().Model(&check).Relation("User").
+		Where("ci_check.id = ?", check.ID).Scan(ctx); err != nil {
+		log.Errorf("get check: %v", err)
+		return nil, huma.Error500InternalServerError("Internal error.")
+	}
 
 	checks := []db.Check{check}
 	setCheckURLs(base, input.PatchID, checks)
