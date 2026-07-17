@@ -307,17 +307,25 @@ fieldset legend {
 	width: auto;
 }
 
-/* --- checks --- */
-check-ok, check-warn, check-fail {
+/* --- pills --- */
+pill {
 	display: inline-block;
+	min-width: 1.3em;
+	text-align: center;
+	margin: 0 1px;
+}
+pill.ok, pill.warn, pill.fail {
 	padding: 0 4px;
 	border-radius: 6px;
 	font-weight: bold;
 	color: #fff;
 }
-check-ok { background: #5cb85c; }
-check-warn { background: #f0ad4e; }
-check-fail { background: #d9534f; }
+pill.ok { background: #5cb85c; }
+pill.warn { background: #f0ad4e; }
+pill.fail { background: #d9534f; }
+.check-ok { color: #5cb85c; font-weight: bold; }
+.check-warn { color: #f0ad4e; font-weight: bold; }
+.check-fail { color: #d9534f; font-weight: bold; }
 
 /* --- download links --- */
 title-bar {

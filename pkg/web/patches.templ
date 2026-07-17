@@ -241,58 +241,63 @@ templ patchListPage(d patchListData) {
 }
 
 templ tagCounts(abbrevs []string, tags map[string]int) {
-	for i, a := range abbrevs {
-		if i > 0 {
-			{ " " }
-		}
-		if c, ok := tags[a]; ok && c > 0 {
-			{ intStr(c) }
-		} else {
-			{ "-" }
-		}
+	for _, a := range abbrevs {
+		<pill>
+			if c, ok := tags[a]; ok && c > 0 {
+				{ intStr(c) }
+			} else {
+				{ "-" }
+			}
+		</pill>
 	}
 }
 
 templ checkCounts(counts [4]int) {
-	if counts[3] > 0 {
-		if counts[1] > 0 {
-			{ intStr(counts[1]) }
-		} else {
-			{ "-" }
-		}
-		{ "/" }
-		if counts[2] > 0 {
-			{ intStr(counts[2]) }
-		} else {
-			{ "-" }
-		}
-		{ "/" }
-		<check-fail>{ intStr(counts[3]) }</check-fail>
-	} else if counts[2] > 0 {
-		if counts[1] > 0 {
-			{ intStr(counts[1]) }
-		} else {
-			{ "-" }
-		}
-		{ "/" }
-		<check-warn>{ intStr(counts[2]) }</check-warn>
-		{ "/-" }
-	} else if counts[1] > 0 {
-		<check-ok>{ intStr(counts[1]) }</check-ok>
-		{ "/-/-" }
+	if counts[db.CheckFail] > 0 {
+		<pill>
+			if counts[db.CheckSuccess] > 0 {
+				{ intStr(counts[db.CheckSuccess]) }
+			} else {
+				{ "-" }
+			}
+		</pill>
+		<pill>
+			if counts[db.CheckWarning] > 0 {
+				{ intStr(counts[db.CheckWarning]) }
+			} else {
+				{ "-" }
+			}
+		</pill>
+		<pill class="fail">{ intStr(counts[db.CheckFail]) }</pill>
+	} else if counts[db.CheckWarning] > 0 {
+		<pill>
+			if counts[db.CheckSuccess] > 0 {
+				{ intStr(counts[db.CheckSuccess]) }
+			} else {
+				{ "-" }
+			}
+		</pill>
+		<pill class="warn">{ intStr(counts[db.CheckWarning]) }</pill>
+		<pill>-</pill>
+	} else if counts[db.CheckSuccess] > 0 {
+		<pill class="ok">{ intStr(counts[db.CheckSuccess]) }</pill>
+		<pill>-</pill>
+		<pill>-</pill>
 	} else {
-		{ "-/-/-" }
+		<pill>-</pill>
+		<pill>-</pill>
+		<pill>-</pill>
 	}
 }
 
 templ checkState(s db.CheckState) {
-	switch int16(s) {
-		case 1:
-			<check-ok>success</check-ok>
-		case 2:
-			<check-warn>warning</check-warn>
-		case 3:
-			<check-fail>fail</check-fail>
+	switch s {
+		case db.CheckSuccess:
+			<span class="check-ok">success</span>
+		case db.CheckWarning:
+			<span class="check-warn">warning</span>
+		case db.CheckFail:
+			<span class="check-fail">fail</span>
 		default:
 			pending
 	}
