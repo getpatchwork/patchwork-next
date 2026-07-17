@@ -248,6 +248,10 @@ patch-list th {
 	padding: 3px 0.5em;
 	border-bottom: 2px solid #ddd;
 	text-align: left;
+	position: sticky;
+	top: 0;
+	background: #fff;
+	z-index: 1;
 }
 patch-list th a { color: #333; }
 patch-list th a:hover { color: #c00; text-decoration: none; }
