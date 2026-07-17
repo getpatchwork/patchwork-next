@@ -27,17 +27,30 @@ func (h *webHandler) TodoLists(w http.ResponseWriter, r *http.Request) {
 	user := getWebUser(r)
 	pc := h.pageCtx(r)
 
+	type countRow struct {
+		ProjectID int `bun:"project_id"`
+		Count     int `bun:"count"`
+	}
+	var counts []countRow
+	q.DB.NewSelect().Model((*db.Patch)(nil)).
+		Column("project_id").
+		ColumnExpr("count(*) AS count").
+		Where("archived = ?", false).
+		Where("delegate_id = ?", user.ID).
+		Where("state_id IN (SELECT id FROM state WHERE action_required = ?)", true).
+		GroupExpr("project_id").
+		Scan(q.Ctx, &counts)
+
+	countByProject := make(map[int]int, len(counts))
+	for _, c := range counts {
+		countByProject[c.ProjectID] = c.Count
+	}
+
 	projects, _ := q.ListProjects()
 
 	var todos []todoProject
 	for _, p := range projects {
-		count, _ := q.DB.NewSelect().Model((*db.Patch)(nil)).
-			Where("project_id = ?", p.ID).
-			Where("archived = ?", false).
-			Where("delegate_id = ?", user.ID).
-			Where("state_id IN (SELECT id FROM state WHERE action_required = ?)", true).
-			Count(q.Ctx)
-		if count > 0 {
+		if count := countByProject[p.ID]; count > 0 {
 			todos = append(todos, todoProject{Project: p, NPatches: count})
 		}
 	}
