@@ -84,7 +84,11 @@ func writeField(w io.Writer, typeName string, field reflect.StructField, val ref
 	active := ""
 
 	if !val.IsZero() {
-		active = fmt.Sprint(val.Interface())
+		if s, ok := val.Interface().(fmt.Stringer); ok {
+			active = s.String()
+		} else {
+			active = fmt.Sprint(val.Interface())
+		}
 	} else if def := field.Tag.Get("default"); def != "" {
 		active = def
 	}
@@ -109,9 +113,13 @@ func writeField(w io.Writer, typeName string, field reflect.StructField, val ref
 	}
 }
 
+var stringerType = reflect.TypeOf((*fmt.Stringer)(nil)).Elem()
+
 func formatValue(t reflect.Type, val string) string {
-	switch t.Kind() {
-	case reflect.Bool, reflect.Int, reflect.Int64:
+	switch {
+	case t.Implements(stringerType):
+		return fmt.Sprintf("%q", val)
+	case t.Kind() == reflect.Bool, t.Kind() == reflect.Int, t.Kind() == reflect.Int64:
 		return val
 	default:
 		return fmt.Sprintf("%q", val)
@@ -119,10 +127,12 @@ func formatValue(t reflect.Type, val string) string {
 }
 
 func zeroValue(t reflect.Type) string {
-	switch t.Kind() {
-	case reflect.Bool:
+	switch {
+	case t.Implements(stringerType):
+		return `""`
+	case t.Kind() == reflect.Bool:
 		return "false"
-	case reflect.Int, reflect.Int64:
+	case t.Kind() == reflect.Int, t.Kind() == reflect.Int64:
 		return "0"
 	default:
 		return `""`
