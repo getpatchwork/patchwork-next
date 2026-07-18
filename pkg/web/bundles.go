@@ -33,7 +33,7 @@ func (h *webHandler) BundleList(w http.ResponseWriter, r *http.Request) {
 
 	var bundles []db.Bundle
 	q.DB.NewSelect().Model(&bundles).
-		ColumnExpr("*, (SELECT count(*) FROM bundle_patch WHERE bundle_id = bundle.id) AS patch_count").
+		ColumnExpr("bundle.*, (SELECT count(*) FROM bundle_patch WHERE bundle_id = bundle.id) AS patch_count").
 		Relation("Owner").Relation("Project").
 		Where("owner_id = ?", user.ID).
 		OrderExpr("name ASC").
@@ -55,7 +55,7 @@ func (h *webHandler) ProjectBundleList(w http.ResponseWriter, r *http.Request) {
 	pc := h.projectPageCtx(r, project)
 
 	sq := q.DB.NewSelect().Model((*db.Bundle)(nil)).
-		ColumnExpr("*, (SELECT count(*) FROM bundle_patch WHERE bundle_id = bundle.id) AS patch_count").
+		ColumnExpr("bundle.*, (SELECT count(*) FROM bundle_patch WHERE bundle_id = bundle.id) AS patch_count").
 		Relation("Owner").Relation("Project").
 		Where("project_id = ?", project.ID).
 		OrderExpr("bundle.name ASC")
