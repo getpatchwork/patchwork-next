@@ -38,19 +38,26 @@ sysconfdir ?= /etc
 unitdir ?= $(prefix)/lib/systemd/system
 datadir ?= $(prefix)/share
 
+installed := $(DESTDIR)$(prefix)/bin/pw
+installed += $(DESTDIR)$(unitdir)/pw-http.service
+installed += $(DESTDIR)$(unitdir)/pw-ingress.service
+installed += $(DESTDIR)$(datadir)/bash-completion/completions/pw
+
+$(DESTDIR)$(unitdir)/%.service: etc/%.service
+	install -Dm644 $< $@
+
+$(DESTDIR)$(datadir)/bash-completion/completions/%: etc/%.bash-completion
+	install -Dm644 $< $@
+
+$(DESTDIR)$(prefix)/bin/pw: pw
+	install -Dm755 $< $@
+
 .PHONY: install
-install: pw
-	install -Dm755 pw $(DESTDIR)$(prefix)/bin/pw
-	install -Dm644 etc/pw-http.service $(DESTDIR)$(unitdir)/pw-http.service
-	install -Dm644 etc/pw-ingress.service $(DESTDIR)$(unitdir)/pw-ingress.service
-	install -Dm644 etc/pw.bash-completion $(DESTDIR)$(datadir)/bash-completion/completions/pw
+install: $(installed)
 
 .PHONY: uninstall
 uninstall:
-	rm -f $(DESTDIR)$(prefix)/bin/pw
-	rm -f $(DESTDIR)$(unitdir)/pw-http.service
-	rm -f $(DESTDIR)$(unitdir)/pw-ingress.service
-	rm -f $(DESTDIR)$(datadir)/bash-completion/completions/pw
+	rm -f $(installed)
 
 PYTHON ?= python3
 
