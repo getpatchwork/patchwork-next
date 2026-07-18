@@ -164,34 +164,38 @@ use `systemctl edit`:
    Use the env:`PATCHWORK_TOML` environment variable to specify an alternative
    path.
 
+.. _reverse-proxy:
 
 Reverse Proxy
 -------------
 
-A reverse proxy like nginx is recommended for TLS termination and static file
-serving. The `make install` target installs a default nginx configuration to
-`/etc/nginx/conf.d/patchwork.conf`.
+A reverse proxy like nginx is recommended for TLS termination. Here is
+a complete nginx setup that deals with:
 
-A minimal nginx configuration:
+- TLS enforcement
+- Certbot/Let's Encrypt renewal
+- Rate limiting
+- "Honest" LLM crawler filtering
+- Optional JS challenge to block LLM crawlers that mask their identity
 
-.. code-block:: nginx
+.. literalinclude:: nginx.conf
+   :language: nginx
 
-   server {
-       listen 443 ssl;
-       server_name patchwork.example.com;
+The JS challenge requires the ``lua-nginx-module`` (packaged as
+``libnginx-mod-http-lua`` or ``nginx-mod-http-lua`` in most Linux distros).
+Save the following to `/etc/nginx/lua/js_challenge.lua`:
 
-       ssl_certificate /etc/letsencrypt/live/patchwork.example.com/fullchain.pem;
-       ssl_certificate_key /etc/letsencrypt/live/patchwork.example.com/privkey.pem;
+.. literalinclude:: js_challenge.lua
+   :language: lua
 
-       location / {
-           proxy_pass http://127.0.0.1:8080;
-           proxy_set_header Host $host;
-           proxy_set_header X-Real-IP $remote_addr;
-           proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-           proxy_set_header X-Forwarded-Proto $scheme;
-       }
-   }
+Finally, generate an HMAC secret for the Lua script:
 
+.. code-block:: bash
+
+   head -c 32 /dev/urandom | base64 > /etc/nginx/lua/.secret
+   user=$(nginx -T 2>/dev/null | sed -En 's/user (.+);/\1/p')
+   chmod 640 /etc/nginx/lua/.secret
+   chgrp $(id -gn $user) /etc/nginx/lua/.secret
 
 Incoming Email
 --------------

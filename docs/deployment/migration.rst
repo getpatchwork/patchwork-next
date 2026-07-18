@@ -214,7 +214,8 @@ Rebuild and reload:
 9. Update nginx
 ~~~~~~~~~~~~~~~~
 
-Replace the gunicorn/uwsgi upstream with the `pw http` server:
+Replace the gunicorn/uwsgi upstream with the `pw http` server endpoint. There is
+no need for a `location /static` block anymore:
 
 .. code-block:: nginx
 
@@ -225,6 +226,8 @@ Replace the gunicorn/uwsgi upstream with the `pw http` server:
         proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
         proxy_set_header X-Forwarded-Proto $scheme;
     }
+
+.. note:: See :ref:`reverse-proxy` for a more complete nginx example.
 
 10. Verify and switch over
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~
