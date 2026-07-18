@@ -109,6 +109,34 @@ Settings Reference
    for legal notices or organization-specific links. The file is read once at
    startup.
 
+.. confval:: [http].web-page-size
+   :type: int
+   :default: `200`
+
+   Default number of items per page in the web interface. Logged-in users can
+   override this value through their profile settings.
+
+.. confval:: [http].web-page-max
+   :type: int
+   :default: `500`
+
+   Maximum number of items per page in the web interface. User profile settings
+   are clamped to this value.
+
+.. confval:: [http].api-page-size
+   :type: int
+   :default: `30`
+
+   Default number of items per page in the REST API, used when the ``per_page``
+   query parameter is not specified.
+
+.. confval:: [http].api-page-max
+   :type: int
+   :default: `250`
+
+   Maximum number of items per page in the REST API. The ``per_page`` query
+   parameter is clamped to this value.
+
 .. confval:: [ingress].listen
    :type: string
    :default: `"127.0.0.1:2525"`

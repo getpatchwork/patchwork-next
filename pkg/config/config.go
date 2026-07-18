@@ -38,6 +38,10 @@ type HttpConfig struct {
 	CustomCSS   string   `help:"Path to a custom CSS file served after the built-in stylesheet." type:"existingfile"`
 	NavHTML     string   `help:"Path to an HTML file whose content is inserted in the navigation bar." type:"existingfile"`
 	FooterHTML  string   `help:"Path to an HTML file whose content is inserted in the footer." type:"existingfile"`
+	WebPageSize int      `help:"Default number of items per page in the web interface." default:"200"`
+	WebPageMax  int      `help:"Maximum number of items per page in the web interface." default:"500"`
+	ApiPageSize int      `help:"Default number of items per page in the API." default:"30"`
+	ApiPageMax  int      `help:"Maximum number of items per page in the API." default:"250"`
 }
 
 type SMTPConfig struct {

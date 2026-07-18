@@ -73,6 +73,8 @@ func newTestServer(t *testing.T) *testServer {
 
 	cfg := &config.Config{}
 	cfg.Database.URL = "sqlite://" + dbPath
+	cfg.Http.ApiPageSize = 30
+	cfg.Http.ApiPageMax = 250
 	database, err := db.Open(cfg)
 	if err != nil {
 		t.Fatal(err)

@@ -21,16 +21,11 @@ import (
 	"github.com/getpatchwork/patchwork/pkg/db"
 )
 
-const (
-	defaultPerPage = 30
-	maxPerPage     = 250
-)
-
 var authRequired = []map[string][]string{{"bearer": {}}}
 
 type PageParams struct {
 	Page    int `query:"page" minimum:"1" default:"1" doc:"Page number"`
-	PerPage int `query:"per_page" minimum:"1" maximum:"250" default:"30" doc:"Results per page"`
+	PerPage int `query:"per_page" minimum:"1" doc:"Results per page"`
 }
 
 type SearchParams struct {
@@ -205,6 +200,21 @@ func NewRouter(cfg *config.Config, database *bun.DB, baseURL string, bus db.Even
 	config.SchemasPath = "/api/schemas"
 	config.Transformers = append(
 		config.Transformers, versionTransformer,
+	)
+	apiPageMax := float64(cfg.Http.ApiPageMax)
+	config.OnAddOperation = append(
+		config.OnAddOperation,
+		func(_ *huma.OpenAPI, op *huma.Operation) {
+			for _, p := range op.Parameters {
+				if p.Name != "per_page" || p.In != "query" {
+					continue
+				}
+				if p.Schema != nil {
+					p.Schema.Default = cfg.Http.ApiPageSize
+					p.Schema.Maximum = &apiPageMax
+				}
+			}
+		},
 	)
 	api := humachi.New(r, config)
 

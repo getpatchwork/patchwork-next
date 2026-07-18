@@ -36,7 +36,13 @@ func (h *webHandler) PatchList(w http.ResponseWriter, r *http.Request) {
 	if page < 1 {
 		page = 1
 	}
-	perPage := 200
+	perPage := h.cfg.Http.WebPageSize
+	if user := getWebUser(r); user != nil && user.ItemsPerPage > 0 {
+		perPage = user.ItemsPerPage
+	}
+	if perPage > h.cfg.Http.WebPageMax {
+		perPage = h.cfg.Http.WebPageMax
+	}
 
 	sq := q.DB.NewSelect().Model((*db.Patch)(nil)).
 		Column("id", "msgid", "date", "submitter_id", "project_id",

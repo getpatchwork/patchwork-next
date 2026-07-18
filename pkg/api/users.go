@@ -80,8 +80,11 @@ func (h *handler) ListUsers(
 	}
 
 	perPage := input.PerPage
-	if perPage > maxPerPage {
-		perPage = maxPerPage
+	if perPage < 1 {
+		perPage = h.cfg.Http.ApiPageSize
+	}
+	if perPage > h.cfg.Http.ApiPageMax {
+		perPage = h.cfg.Http.ApiPageMax
 	}
 	offset := (input.Page - 1) * perPage
 
