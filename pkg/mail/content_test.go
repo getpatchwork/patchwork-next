@@ -149,3 +149,10 @@ func TestInvalidCharset(t *testing.T) {
 	assert.NotEmpty(t, diff, "expected diff despite invalid charset")
 	assert.NotEmpty(t, comment, "expected comment despite invalid charset")
 }
+
+func TestMultipartWithoutClosingBoundary(t *testing.T) {
+	m := openTestMail(t, "mail/0028-multipart-without-closing-boundary.mbox")
+	diff, comment := FindPatchContent(m)
+	assert.Empty(t, diff, "expected no diff")
+	assert.NotEmpty(t, comment, "expected a comment despite multipart without closing boundary")
+}

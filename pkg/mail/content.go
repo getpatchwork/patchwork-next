@@ -26,7 +26,8 @@ func findTextParts(m *mail.Reader) []textPart {
 	var results []textPart
 	var buf strings.Builder
 
-	for {
+	// Arbitrary limit of parts to prevent an infinite loop
+	for range 1024 {
 		part, err := m.NextPart()
 		if errors.Is(err, io.EOF) {
 			break
@@ -57,6 +58,10 @@ func findTextParts(m *mail.Reader) []textPart {
 
 		buf.Reset()
 		if n, err := io.Copy(&buf, part.Body); err != nil {
+			if strings.Contains(err.Error(), "EOF") {
+				break
+			}
+
 			log.Warnf("failed to read part body: %s", err)
 			continue
 		} else if n == 0 {
