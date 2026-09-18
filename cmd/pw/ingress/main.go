@@ -29,9 +29,10 @@ import (
 )
 
 type CLI struct {
-	Stdin  bool   `short:"i" help:"Read one email from stdin and exit."`
-	Mbox   bool   `short:"m" help:"Read all emails in mbox format from stdin."`
-	ListID string `short:"l" help:"Force List-ID value instead of reading it from email headers."`
+	Stdin     bool   `short:"i" help:"Read one email from stdin and exit."`
+	Mbox      bool   `short:"m" help:"Read all emails in mbox format from stdin."`
+	ListID    string `short:"l" help:"Force List-ID value instead of reading it from email headers."`
+	Anonymize bool   `help:"Partially anonymize messages to provided list. ListID has to be specified."`
 }
 
 func (c *CLI) Run(ctx context.Context) error {
@@ -50,8 +51,13 @@ func (c *CLI) Run(ctx context.Context) error {
 	defer bus.Shutdown()
 	ctx = db.WithBus(ctx, bus)
 
+	if c.Anonymize && c.ListID == "" {
+		return fmt.Errorf("anonymize requires listid")
+	}
+
 	if c.Stdin || c.Mbox {
 		var dupErr *mail.DuplicateMailError
+		var parseErr *mail.ParseError
 		var err error
 
 		if c.Mbox {
@@ -62,17 +68,17 @@ func (c *CLI) Run(ctx context.Context) error {
 				if err != nil {
 					break
 				}
-				err = mail.ParseMail(ctx, database, msg, c.ListID)
-				if errors.As(err, &dupErr) {
+				err = mail.ParseMail(ctx, database, msg, c.Anonymize, c.ListID)
+				if errors.As(err, &dupErr) || errors.As(err, &parseErr) {
 					log.Debugf("ignoring %s", err)
 				} else if err != nil {
 					break
 				}
 			}
 		} else {
-			err = mail.ParseMail(ctx, database, os.Stdin, c.ListID)
+			err = mail.ParseMail(ctx, database, os.Stdin, c.Anonymize, c.ListID)
 		}
-		if errors.As(err, &dupErr) {
+		if errors.As(err, &dupErr) || errors.As(err, &parseErr) {
 			log.Debugf("ignoring %s", err)
 		} else if err != nil && !errors.Is(err, io.EOF) {
 			return fmt.Errorf("smtp: %w", err)
@@ -80,7 +86,7 @@ func (c *CLI) Run(ctx context.Context) error {
 		return nil
 	}
 
-	sock, srv, err := c.startSMTPServer(ctx)
+	sock, srv, err := c.startSMTPServer(ctx, c.Anonymize)
 	if err != nil {
 		return fmt.Errorf("smtp: %w", err)
 	}
@@ -104,9 +110,10 @@ func (c *CLI) Run(ctx context.Context) error {
 	return nil
 }
 
-func (c *CLI) startSMTPServer(ctx context.Context) (net.Listener, *smtp.Server, error) {
+func (c *CLI) startSMTPServer(ctx context.Context, anonymize bool) (net.Listener, *smtp.Server, error) {
 	cfg := pw.GetConfig(ctx)
-	s := smtp.NewServer(&backend{ctx: ctx, listID: c.ListID})
+
+	s := smtp.NewServer(&backend{ctx: ctx, listID: c.ListID, anonymize: anonymize})
 	s.Addr = cfg.Ingress.Listen
 	s.Domain = "localhost"
 	s.ReadTimeout = 30 * time.Second
@@ -129,8 +136,9 @@ func (c *CLI) startSMTPServer(ctx context.Context) (net.Listener, *smtp.Server, 
 }
 
 type backend struct {
-	ctx    context.Context
-	listID string
+	ctx       context.Context
+	listID    string
+	anonymize bool
 }
 
 func (b *backend) NewSession(c *smtp.Conn) (smtp.Session, error) {
@@ -200,7 +208,7 @@ func (s *session) Data(r io.Reader) error {
 
 	err = mail.ParseMail(
 		s.backend.ctx, pw.GetDB(s.backend.ctx),
-		bytes.NewReader(data), s.backend.listID,
+		bytes.NewReader(data), s.backend.anonymize, s.backend.listID,
 	)
 	if err != nil {
 		var dupErr *mail.DuplicateMailError

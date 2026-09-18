@@ -62,7 +62,7 @@ func TestSubjectMatchListIDOverride(t *testing.T) {
 	data := createEmail(sampleDiff,
 		withSubject("[PATCH keyword] test"),
 		withListID("nonexistent.test.org"))
-	err := ParseMail(ctx, database, bytes.NewReader(data),
+	err := ParseMail(ctx, database, bytes.NewReader(data), false,
 		"test-subject-match.test.org")
 	require.NoError(t, err)
 	assert.Equal(t, 1, countPatches(t, database), "expected 1 patch with listid override")
@@ -92,14 +92,14 @@ func TestListIdHeaderVariants(t *testing.T) {
 
 	t.Run("blank list id", func(t *testing.T) {
 		data := createEmail(sampleDiff, withListID(""))
-		err := ParseMail(ctx, database, bytes.NewReader(data))
+		err := ParseMail(ctx, database, bytes.NewReader(data), false)
 		require.NoError(t, err)
 		assert.Equal(t, 0, countPatches(t, database), "expected 0 patches for blank list-id")
 	})
 
 	t.Run("substring list id", func(t *testing.T) {
 		data := createEmail(sampleDiff, withListID("example.com"))
-		err := ParseMail(ctx, database, bytes.NewReader(data))
+		err := ParseMail(ctx, database, bytes.NewReader(data), false)
 		require.NoError(t, err)
 		assert.Equal(t, 0, countPatches(t, database), "expected 0 patches for substring match")
 	})
@@ -107,7 +107,7 @@ func TestListIdHeaderVariants(t *testing.T) {
 	t.Run("short list id", func(t *testing.T) {
 		data := createEmail(sampleDiff)
 		raw := strings.Replace(string(data), "List-Id: <test.example.com>", "List-Id: test.example.com", 1)
-		err := ParseMail(ctx, database, strings.NewReader(raw))
+		err := ParseMail(ctx, database, strings.NewReader(raw), false)
 		require.NoError(t, err)
 		assert.Equal(t, 1, countPatches(t, database), "expected 1 patch for short list-id")
 	})
@@ -116,7 +116,7 @@ func TestListIdHeaderVariants(t *testing.T) {
 		data := createEmail(sampleDiff)
 		raw := strings.Replace(string(data), "List-Id: <test.example.com>",
 			"List-Id: Test text <test.example.com>", 1)
-		err := ParseMail(ctx, database, strings.NewReader(raw))
+		err := ParseMail(ctx, database, strings.NewReader(raw), false)
 		require.NoError(t, err)
 		assert.Equal(t, 2, countPatches(t, database), "expected 2 patches for long list-id")
 	})
@@ -128,7 +128,7 @@ func TestListIdWhitespace(t *testing.T) {
 	data := createEmail(sampleDiff)
 	raw := strings.Replace(string(data), "List-Id: <test.example.com>",
 		"List-Id:  ", 1)
-	ParseMail(ctx, database, strings.NewReader(raw))
+	ParseMail(ctx, database, strings.NewReader(raw), false)
 	assert.Equal(t, 0, countPatches(t, database), "expected 0 patches for whitespace list-id")
 }
 

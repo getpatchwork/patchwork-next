@@ -81,7 +81,7 @@ func TestSenderEncodingEmpty(t *testing.T) {
 	data := "Subject: test\r\nMessage-ID: <empty-from@test>\r\n" +
 		"List-Id: <test.example.com>\r\n\r\n" + sampleDiff
 	err := ParseMail(ctx, database,
-		strings.NewReader(data), "test.example.com")
+		strings.NewReader(data), false, "test.example.com")
 	var pe *ParseError
 	assert.ErrorAs(t, err, &pe)
 }
@@ -148,7 +148,7 @@ func TestSenderDMARCMunging(t *testing.T) {
 		raw := string(data)
 		raw = strings.Replace(raw, "\r\n\r\n",
 			"\r\nReply-To: Existing Sender <existing@example.com>\r\n\r\n", 1)
-		ParseMail(ctx, database, strings.NewReader(raw),
+		ParseMail(ctx, database, strings.NewReader(raw), false,
 			"test.example.com")
 
 		var count int
@@ -170,7 +170,7 @@ func TestSenderDMARCMunging(t *testing.T) {
 			withFrom(munged),
 			withListID("test.example.com"),
 			withHeader("X-Original-From", "Existing Sender <existing@example.com>"))
-		ParseMail(ctx, database, bytes.NewReader(data),
+		ParseMail(ctx, database, bytes.NewReader(data), false,
 			"test.example.com")
 
 		var count int
@@ -194,7 +194,7 @@ func TestSenderWeirdDMARCMunging(t *testing.T) {
 		withFrom(munged),
 		withListID("test.example.com"),
 		withHeader("X-Original-From", "Existing Sender <existing@example.com>"))
-	ParseMail(ctx, database, bytes.NewReader(data),
+	ParseMail(ctx, database, bytes.NewReader(data), false,
 		"test.example.com")
 
 	var count int

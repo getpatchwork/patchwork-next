@@ -13,6 +13,8 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+
+	"github.com/getpatchwork/patchwork/pkg/db"
 )
 
 var sampleDiff = "diff --git a/meep.text b/meep.text\n" +
@@ -371,7 +373,7 @@ func TestAttachmentPatch(t *testing.T) {
 			)
 
 			err := ParseMail(ctx, database,
-				strings.NewReader(data), "test.example.com")
+				strings.NewReader(data), false, "test.example.com")
 			require.NoError(t, err)
 		})
 	}
@@ -415,7 +417,7 @@ func TestFindMessageID(t *testing.T) {
 		data := "From: test@example.com\r\nSubject: test\r\n\r\nbody\r\n"
 		database, ctx, _, _ := testDB(t, "test.example.com")
 		_ = ParseMail(ctx, database,
-			strings.NewReader(data), "test.example.com")
+			strings.NewReader(data), false, "test.example.com")
 	})
 
 	t.Run("header with comments", func(t *testing.T) {
@@ -438,7 +440,7 @@ func TestFindMessageIDInvalidFallback(t *testing.T) {
 			"\r\n%s", sampleDiff,
 	)
 	_ = ParseMail(ctx, database,
-		strings.NewReader(data), "test.example.com")
+		strings.NewReader(data), false, "test.example.com")
 }
 
 func TestFindReferencesInvalidFallback(t *testing.T) {
@@ -450,4 +452,86 @@ func TestFindReferencesInvalidFallback(t *testing.T) {
 	})
 	refs := FindReferences(h)
 	_ = refs
+}
+
+func TestAnonymize(t *testing.T) {
+	database, ctx, _, _ := testDB(t, "test.example.com")
+
+	orgProj := db.Project{
+		Linkname:  "org-test-project",
+		Name:      "Original Test Project",
+		Listid:    "prod.example.com",
+		Listemail: "test@" + "prod.example.com",
+		UseTags:   true,
+	}
+	err := database.NewInsert().Model(&orgProj).
+		Returning("*").
+		Scan(context.Background())
+	require.NoError(t, err)
+
+	data := fmt.Sprintf(
+		"From: name <name@prod.example.com>\r\n"+
+			"Subject: [PATCH] test\r\n"+
+			"Message-ID: <msgid@prod.example.com>\r\n"+
+			"In-Reply-To: <msgid2@prod.example.com>\r\n"+
+			"References: <msgid3@prod.example.com>\r\n"+
+			"List-Id: <prod.example.com>\r\n"+
+			"Mime-Version: 1.0\r\n"+
+			"Content-Type: text/plain\r\n"+
+			"Date: Sat, 25 Oct 2025 16:08:59 +0300\r\n"+
+			"DKIM-Signature: invalid\r\n"+
+			"Received: invalid\r\n"+
+			"X-Unknown-Header: some data\r\n"+
+			"\r\n%s", sampleDiff,
+	)
+	_ = ParseMail(ctx, database,
+		strings.NewReader(data), true, "test.example.com")
+
+	var patch db.Patch
+	database.NewSelect().TableExpr("patch").
+		Limit(1).
+		Scan(context.Background(), &patch)
+
+	assert.Equal(t, "<YX-dQdlCn9WDRoa7DK8SUA==@test.example.com>", patch.Msgid)
+	assert.Equal(t, sampleDiff, *patch.Diff)
+	assert.Equal(t, "test", patch.Name)
+	assert.NotEqual(t, orgProj.ID, patch.ProjectID)
+
+	for line := range strings.Lines(patch.Headers) {
+		split := strings.SplitN(line, ":", 2)
+		name := split[0]
+		value := strings.TrimSpace(split[1])
+
+		switch name {
+		case "From":
+			assert.Equal(t, "\"name\" <jMgxeXuue9pjhfGwVtJ12g==@test.example.com>", value)
+		case "Message-Id":
+			assert.Equal(t, "<YX-dQdlCn9WDRoa7DK8SUA==@test.example.com>", patch.Msgid)
+		case "In-Reply-To":
+			assert.Equal(t, "<b1fDLNDfC2hpylSip1gjLg==@test.example.com>", value)
+		case "References":
+			assert.Equal(t, "<XT0eAL1xLL3UwE2Vw0eidA==@test.example.com>", value)
+		case "List-Id":
+			assert.Equal(t, "<test.example.com>", value)
+		case "Mime-Version":
+			assert.Equal(t, "1.0", value)
+		case "Content-Type":
+			assert.Equal(t, "text/plain", value)
+		case "Date":
+			assert.Equal(t, "Sat, 25 Oct 2025 16:08:59 +0300", value)
+		case "Subject":
+			assert.Equal(t, "[PATCH] test", value)
+		default:
+			assert.Fail(t, "invalid header in headers %s", name)
+		}
+	}
+
+	var submitter db.Person
+	database.NewSelect().TableExpr("person").
+		Limit(1).
+		Scan(context.Background(), &submitter)
+
+	assert.Equal(t, submitter.ID, patch.SubmitterID)
+	assert.Equal(t, "name", *submitter.Name)
+	assert.Equal(t, "jmgxexuue9pjhfgwvtj12g==@test.example.com", submitter.Email)
 }

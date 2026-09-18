@@ -222,7 +222,7 @@ func TestDependencyMulti(t *testing.T) {
 			break
 		}
 		buf, _ := io.ReadAll(msg)
-		ParseMail(ctx, database, bytes.NewReader(buf), "test.example.com")
+		ParseMail(ctx, database, bytes.NewReader(buf), false, "test.example.com")
 	}
 
 	var depCount int
@@ -278,7 +278,7 @@ func TestDependencyMulti2(t *testing.T) {
 			break
 		}
 		buf, _ := io.ReadAll(msg)
-		ParseMail(ctx, database, bytes.NewReader(buf), "test.example.com")
+		ParseMail(ctx, database, bytes.NewReader(buf), false, "test.example.com")
 	}
 
 	var depCount int

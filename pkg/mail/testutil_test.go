@@ -156,7 +156,7 @@ func parseMbox(t *testing.T, ctx context.Context, database *bun.DB, filename str
 		if len(listid) > 0 {
 			lid = listid[0]
 		}
-		err = ParseMail(ctx, database, bytes.NewReader(buf), lid)
+		err = ParseMail(ctx, database, bytes.NewReader(buf), false, lid)
 		if err != nil {
 			var dup *DuplicateMailError
 			if errors.As(err, &dup) {
@@ -325,7 +325,7 @@ func parseMboxTemplate(t *testing.T, ctx context.Context, database *bun.DB, file
 		}
 		buf, err := io.ReadAll(msg)
 		require.NoError(t, err)
-		err = ParseMail(ctx, database, bytes.NewReader(buf), listid)
+		err = ParseMail(ctx, database, bytes.NewReader(buf), false, listid)
 		if err != nil {
 			var dup *DuplicateMailError
 			if errors.As(err, &dup) {
@@ -449,7 +449,7 @@ func withHeader(k, v string) emailOpt {
 func parseEmail(t *testing.T, ctx context.Context, database *bun.DB, body string, opts ...emailOpt) error {
 	t.Helper()
 	data := createEmail(body, opts...)
-	return ParseMail(ctx, database, bytes.NewReader(data))
+	return ParseMail(ctx, database, bytes.NewReader(data), false)
 }
 
 // parseEml reads a single .eml or .mbox file and calls ParseMail.
@@ -457,7 +457,7 @@ func parseEml(t *testing.T, ctx context.Context, database *bun.DB, filename stri
 	t.Helper()
 	data, err := os.ReadFile("testdata/" + filename)
 	require.NoError(t, err)
-	return ParseMail(ctx, database, bytes.NewReader(data))
+	return ParseMail(ctx, database, bytes.NewReader(data), false)
 }
 
 // countEvents drains pending events by shutting down the bus, then
