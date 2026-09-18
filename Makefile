@@ -84,7 +84,7 @@ docs:
 import_reviser ?= github.com/incu6us/goimports-reviser/v3@v3.12.6
 import_reviser_flags ?= -rm-unused -project-name github.com/getpatchwork/patchwork -use-cache
 gofumpt ?= mvdan.cc/gofumpt@v0.9.2
-golangci_lint ?= github.com/golangci/golangci-lint/v2/cmd/golangci-lint@v2.12.2
+golangci_lint ?= github.com/golangci/golangci-lint/v2/cmd/golangci-lint@v2.13.2
 license_exclude = *.md *.asc *.yaml docs/requirements.txt *.service CONTRIBUTORS LICENSE .* go.mod go.sum pkg/mail/testdata docs/deployment/nginx.conf docs/deployment/js_challenge.lua
 
 .PHONY: test
