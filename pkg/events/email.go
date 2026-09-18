@@ -20,6 +20,11 @@ import (
 )
 
 func SendEmail(cfg *config.SMTPConfig, to, subject, body string, extraHeaders map[string]string) error {
+	if cfg.Disabled {
+		log.Infof("sending emails is disabled, attempted to send: to=%s subject=%q", to, subject)
+		return nil
+	}
+
 	from, err := mail.ParseAddress(cfg.From)
 	if err != nil {
 		return fmt.Errorf("from: %q %w", from, err)

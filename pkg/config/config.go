@@ -58,6 +58,7 @@ type SMTPConfig struct {
 	User       string `help:"SMTP authentication username."`
 	Password   string `help:"SMTP authentication password."`
 	From       string `help:"Sender email address for outgoing mail." default:"patchwork@localhost"`
+	Disabled   bool   `help:"Do not send email." default:"false"`
 }
 
 const commonDescription = `
