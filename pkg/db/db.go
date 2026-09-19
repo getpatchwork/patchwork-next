@@ -43,7 +43,14 @@ func Open(cfg *config.Config) (*bun.DB, error) {
 
 	u, err := url.Parse(cfg.Database.URL)
 	if err != nil {
-		return nil, err
+		// Go 1.26.0's url.Parse rejects the ":memory:" authority of
+		// "sqlite://:memory:" as an invalid port. Forge the URL by
+		// hand for sqlite DSNs so it works regardless of the Go
+		// version.
+		u, err = parseSqliteURL(cfg.Database.URL, err)
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	switch u.Scheme {
@@ -120,6 +127,28 @@ func Open(cfg *config.Config) (*bun.DB, error) {
 	}
 
 	return bun.NewDB(conn, dialect), nil
+}
+
+// parseSqliteURL rebuilds a URL for sqlite DSNs that url.Parse rejects,
+// mirroring how a lenient url.Parse fills the fields. It only handles the
+// sqlite and sqlite3 schemes; other URLs keep the original parse error.
+func parseSqliteURL(rawURL string, parseErr error) (*url.URL, error) {
+	scheme, rest, ok := strings.Cut(rawURL, "://")
+	if !ok || (scheme != "sqlite" && scheme != "sqlite3") {
+		return nil, parseErr
+	}
+	u := &url.URL{Scheme: scheme}
+	if path, query, ok := strings.Cut(rest, "?"); ok {
+		rest = path
+		u.RawQuery = query
+	}
+	// url.Parse puts a relative path in Host and an absolute one in Path.
+	if strings.HasPrefix(rest, "/") {
+		u.Path = rest
+	} else {
+		u.Host = rest
+	}
+	return u, nil
 }
 
 // restrictDBFile ensures the sqlite database file exists with
