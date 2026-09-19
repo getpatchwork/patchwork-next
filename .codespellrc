@@ -9,3 +9,5 @@ skip =
 	docs/.venv,
 	*_templ.go,
 	pw,
+	go*.mod,
+	go*.sum,

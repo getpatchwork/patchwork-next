@@ -81,11 +81,12 @@ docs:
 		-Dhtml_theme=sphinx_rtd_theme \
 		docs docs/_build
 
-import_reviser ?= github.com/incu6us/goimports-reviser/v3@v3.12.6
+# CI tooling lives in its own module (go.tool.mod) to keep it out of the main
+# go.mod. To update a tool version:
+#   go get -modfile=go.tool.mod -tool <module>@<version>
+GO_TOOL = $(GO) tool -modfile=go.tool.mod
 import_reviser_flags ?= -rm-unused -project-name github.com/getpatchwork/patchwork -use-cache
-gofumpt ?= mvdan.cc/gofumpt@v0.9.2
-golangci_lint ?= github.com/golangci/golangci-lint/v2/cmd/golangci-lint@v2.13.2
-license_exclude = *.md *.asc *.yaml docs/requirements.txt *.service CONTRIBUTORS LICENSE .* go.mod go.sum pkg/mail/testdata docs/deployment/nginx.conf docs/deployment/js_challenge.lua
+license_exclude = *.md *.asc *.yaml docs/requirements.txt *.service CONTRIBUTORS LICENSE .* go*.mod go*.sum pkg/mail/testdata docs/deployment/nginx.conf docs/deployment/js_challenge.lua
 
 .PHONY: test
 test: pw
@@ -105,17 +106,17 @@ lint:
 		exit 1; \
 	}
 	@echo '[goimports-reviser]'
-	$Q ! $(GO) run $(import_reviser) $(import_reviser_flags) -list-diff -output stdout ./... | grep . || { \
+	$Q ! $(GO_TOOL) goimports-reviser $(import_reviser_flags) -list-diff -output stdout ./... | grep . || { \
 		echo 'error: above files need import sorting'; \
 		exit 1; \
 	}
 	@echo '[gofumpt]'
-	$Q ! $(GO) run $(gofumpt) -d . | grep ^diff || { \
+	$Q ! $(GO_TOOL) gofumpt -d . | grep ^diff || { \
 		echo 'error: above files need reformatting'; \
 		exit 1; \
 	}
 	@echo '[golangci-lint]'
-	@$(GO) run $(golangci_lint) run
+	@$(GO_TOOL) golangci-lint run
 	@echo '[license-check]'
 	$Q ! git --no-pager grep -LF 'SPDX-License-Identifier: GPL-2.0-or-later' -- $(addprefix :!:,$(license_exclude)) || { \
 		echo 'error: above files are missing license'; \
@@ -133,8 +134,8 @@ lint:
 .PHONY: format
 format:
 	$(GO) tool templ fmt .
-	$(GO) run $(import_reviser) $(import_reviser_flags) ./...
-	$(GO) run $(gofumpt) -w .
+	$(GO_TOOL) goimports-reviser $(import_reviser_flags) ./...
+	$(GO_TOOL) gofumpt -w .
 
 REVISION_RANGE ?= @{u}..
 
