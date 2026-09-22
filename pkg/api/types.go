@@ -128,7 +128,7 @@ type PatchListResponse struct {
 	Check          string           `json:"check" enum:"pending,success,warning,fail"`
 	Checks         string           `json:"checks" format:"uri"`
 	Tags           map[string]int   `json:"tags"`
-	Related        []PatchEmbedded  `json:"related" since:"1.2"`
+	Related        *[]PatchEmbedded `json:"related,omitzero" since:"1.2"`
 }
 
 type PatchDetailResponse struct {

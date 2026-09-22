@@ -364,6 +364,7 @@ func applyPatchFilters(q *bun.SelectQuery, input *ListPatchesInput) *bun.SelectQ
 }
 
 func patchToListResponse(p *db.Patch, base string) PatchListResponse {
+	related := make([]PatchEmbedded, 0)
 	r := PatchListResponse{
 		ID:        p.ID,
 		URL:       fmt.Sprintf("%s/patches/%d", base, p.ID),
@@ -378,7 +379,7 @@ func patchToListResponse(p *db.Patch, base string) PatchListResponse {
 		Checks:    fmt.Sprintf("%s/patches/%d/checks", base, p.ID),
 		Tags:      p.Tags,
 		Series:    []SeriesEmbedded{},
-		Related:   []PatchEmbedded{},
+		Related:   &related,
 	}
 	if p.Hash != nil {
 		r.Hash = *p.Hash
@@ -405,7 +406,7 @@ func patchToListResponse(p *db.Patch, base string) PatchListResponse {
 		r.Tags = map[string]int{}
 	}
 	for _, ref := range p.Related {
-		r.Related = append(r.Related, PatchEmbedded{
+		related = append(related, PatchEmbedded{
 			ID:   ref.ID,
 			URL:  fmt.Sprintf("%s/patches/%d", base, ref.ID),
 			Name: ref.Name,
@@ -418,9 +419,6 @@ func patchToListResponse(p *db.Patch, base string) PatchListResponse {
 			Name: ref.Name,
 			Mbox: fmt.Sprintf("%s/series/%d/mbox", base, ref.ID),
 		})
-	}
-	if r.Related == nil {
-		r.Related = []PatchEmbedded{}
 	}
 	if r.Series == nil {
 		r.Series = []SeriesEmbedded{}
