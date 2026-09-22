@@ -36,6 +36,15 @@ type appliedFilter struct {
 	RemoveURL string
 }
 
+func getFilterValue(filters []appliedFilter, label string) string {
+	for _, filter := range filters {
+		if filter.Label == label {
+			return strings.TrimSpace(filter.Value)
+		}
+	}
+	return ""
+}
+
 templ patchListPage(d patchListData) {
 	@layout(d.Project.Name, []breadcrumb{
 		{Label: d.Project.Name, URL: "/project/" + d.Project.Linkname},
@@ -64,24 +73,60 @@ templ patchListPage(d patchListData) {
 				<select name="state" title="State">
 					<option value="*">Action required</option>
 					<option value="all">All states</option>
+					{{ currentState := getFilterValue(d.Filters, "State") }}
 					for _, s := range d.States {
-						<option value={ intStr(int(s.ID)) }>{ s.Name }</option>
+						if currentState == s.Name {
+							<option value={ intStr(int(s.ID)) } selected>{ s.Name }</option>
+						} else {
+							<option value={ intStr(int(s.ID)) }>{ s.Name }</option>
+						}
 					}
 				</select>
+				{{ currentArchived := getFilterValue(d.Filters, "Archive") }}
 				<fieldset title="Archived">
 					<legend>Archived</legend>
-					<label><input type="radio" name="archive" value="" checked/> No</label>
-					<label><input type="radio" name="archive" value="true"/> Yes</label>
-					<label><input type="radio" name="archive" value="both"/> Both</label>
+					if currentArchived == "" || currentArchived == "No" {
+						<label><input type="radio" name="archive" value="" checked/> No</label>
+					} else {
+						<label><input type="radio" name="archive" value=""/> No</label>
+					}
+					if currentArchived == "Archived" {
+						<label><input type="radio" name="archive" value="true" checked/> Yes</label>
+					} else {
+						<label><input type="radio" name="archive" value="true"/> Yes</label>
+					}
+					if currentArchived == "Both" {
+						<label><input type="radio" name="archive" value="both" checked/> Both</label>
+					} else {
+						<label><input type="radio" name="archive" value="both"/> Both</label>
+					}
 				</fieldset>
 				<select name="delegate" title="Delegate">
 					<option value="">Delegate...</option>
+					{{ currentDelegate := getFilterValue(d.Filters, "Delegate") }}
 					for _, u := range d.Delegates {
-						<option value={ fmt.Sprintf("%d", u.ID) }>{ u.Username }</option>
+						{{ idString := fmt.Sprintf("%d", u.ID) }}
+						if idString == currentDelegate {
+							<option value={ idString } selected>{ u.Username }</option>
+						} else {
+							<option value={ idString }>{ u.Username }</option>
+						}
 					}
 				</select>
-				<input type="text" name="submitter" placeholder="Submitter" title="Submitter"/>
-				<input type="text" name="q" placeholder="Search" title="Search"/>
+				<input
+					type="text"
+					name="submitter"
+					placeholder="Submitter"
+					title="Submitter"
+					value={ getFilterValue(d.Filters, "Submitter") }
+				/>
+				<input
+					type="text"
+					name="q"
+					placeholder="Search"
+					title="Search"
+					value={ getFilterValue(d.Filters, "Search") }
+				/>
 				<button type="submit">Filter</button>
 			</form>
 		</patch-filters>
