@@ -81,12 +81,12 @@ docs:
 		-Dhtml_theme=sphinx_rtd_theme \
 		docs docs/_build
 
-# CI tooling lives in its own module (go.tool.mod) to keep it out of the main
-# go.mod. To update a tool version:
-#   go get -modfile=go.tool.mod -tool <module>@<version>
-GO_TOOL = $(GO) tool -modfile=go.tool.mod
+# CI tooling lives in its own module (devtools/go.mod) to keep it out of the
+# main go.mod. To update a tool version:
+#   cd devtools && go get -tool <module>@<version> && go mod tidy
+GO_TOOL = $(GO) tool -modfile=devtools/go.mod
 import_reviser_flags ?= -rm-unused -project-name github.com/getpatchwork/patchwork -use-cache
-license_exclude = *.md *.asc *.yaml docs/requirements.txt *.service CONTRIBUTORS LICENSE .* go*.mod go*.sum pkg/mail/testdata docs/deployment/nginx.conf docs/deployment/js_challenge.lua
+license_exclude = *.md *.asc *.yaml docs/requirements.txt *.service CONTRIBUTORS LICENSE .* go.mod go.sum devtools/go.mod devtools/go.sum pkg/mail/testdata docs/deployment/nginx.conf docs/deployment/js_challenge.lua
 
 .PHONY: test
 test: pw
