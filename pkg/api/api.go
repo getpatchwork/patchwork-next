@@ -28,6 +28,19 @@ type PageParams struct {
 	PerPage int `query:"per_page" minimum:"1" doc:"Results per page"`
 }
 
+func (p PageParams) offsetPage(cfg *config.Config) (int, int) {
+	perPage := p.PerPage
+	if perPage < 1 {
+		perPage = cfg.Http.ApiPageSize
+	}
+	if perPage > cfg.Http.ApiPageMax {
+		perPage = cfg.Http.ApiPageMax
+	}
+	offset := (p.Page - 1) * perPage
+
+	return offset, perPage
+}
+
 type SearchParams struct {
 	Q     string `query:"q" doc:"Search term"`
 	Order string `query:"order" doc:"Ordering field"`

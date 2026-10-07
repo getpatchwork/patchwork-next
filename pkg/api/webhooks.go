@@ -72,14 +72,7 @@ func (h *handler) ListWebhooks(
 
 	base := h.apiBase(ctx)
 
-	perPage := input.PerPage
-	if perPage < 1 {
-		perPage = h.cfg.Http.ApiPageSize
-	}
-	if perPage > h.cfg.Http.ApiPageMax {
-		perPage = h.cfg.Http.ApiPageMax
-	}
-	offset := (input.Page - 1) * perPage
+	offset, perPage := input.offsetPage(h.cfg)
 
 	sq := db.GetQueries(ctx).Select((*db.Webhook)(nil)).
 		Where("project_id = ?", input.ProjectID)

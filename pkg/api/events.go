@@ -59,14 +59,7 @@ func (h *handler) ListEvents(
 		return nil, huma.Error500InternalServerError("Internal error.")
 	}
 
-	perPage := input.PerPage
-	if perPage < 1 {
-		perPage = h.cfg.Http.ApiPageSize
-	}
-	if perPage > h.cfg.Http.ApiPageMax {
-		perPage = h.cfg.Http.ApiPageMax
-	}
-	offset := (input.Page - 1) * perPage
+	offset, perPage := input.offsetPage(h.cfg)
 
 	order := "event.date DESC"
 	if input.Order == "date" {

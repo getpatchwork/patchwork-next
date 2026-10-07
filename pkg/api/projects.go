@@ -119,14 +119,7 @@ func (h *handler) ListProjects(
 		return nil, huma.Error500InternalServerError("Internal error.")
 	}
 
-	perPage := input.PerPage
-	if perPage < 1 {
-		perPage = h.cfg.Http.ApiPageSize
-	}
-	if perPage > h.cfg.Http.ApiPageMax {
-		perPage = h.cfg.Http.ApiPageMax
-	}
-	offset := (input.Page - 1) * perPage
+	offset, perPage := input.offsetPage(h.cfg)
 
 	var projects []db.Project
 	if err := sq.OrderExpr("id ASC").Offset(offset).Limit(perPage).Scan(ctx, &projects); err != nil {
