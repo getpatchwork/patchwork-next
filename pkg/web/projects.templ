@@ -42,7 +42,7 @@ templ projectListPage(pc pageContext, projects []db.Project) {
 	}
 }
 
-templ projectDetailPage(pc pageContext, project db.Project, maintainers []db.User, nPatches int, nArchived int) {
+templ projectDetailPage(pc pageContext, project db.Project, maintainers []db.User, nPatches, nArchived int64) {
 	@layout(project.Name, []breadcrumb{
 		{Label: project.Name},
 	}, pc) {
@@ -78,7 +78,7 @@ templ projectDetailPage(pc pageContext, project db.Project, maintainers []db.Use
 						<th>Patches</th>
 						<td>
 							<a href={ templ.SafeURL("/project/" + project.Linkname + "/list") }>
-								{ intStr(nPatches) }
+								{ nPatches }
 							</a>
 							if nArchived > 0 {
 								{ fmt.Sprintf(" (+ %d archived)", nArchived) }

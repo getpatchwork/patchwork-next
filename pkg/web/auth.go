@@ -55,8 +55,7 @@ func (h *webHandler) RegisterSubmit(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if len(errors) == 0 {
-		var count int
-		count, _ = q.Select((*db.User)(nil)).
+		count, _ := q.Select((*db.User)(nil)).
 			Where("username = ?", username).
 			Count(q.Ctx)
 		if count > 0 {

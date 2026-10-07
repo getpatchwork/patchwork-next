@@ -28,7 +28,7 @@ type PageParams struct {
 	PerPage int `query:"per_page" minimum:"1" doc:"Results per page"`
 }
 
-func (p PageParams) offsetPage(cfg *config.Config) (int, int) {
+func (p PageParams) offsetPage(cfg *config.Config) (int64, int64) {
 	perPage := p.PerPage
 	if perPage < 1 {
 		perPage = cfg.Http.ApiPageSize
@@ -38,7 +38,7 @@ func (p PageParams) offsetPage(cfg *config.Config) (int, int) {
 	}
 	offset := (p.Page - 1) * perPage
 
-	return offset, perPage
+	return int64(offset), int64(perPage)
 }
 
 type SearchParams struct {

@@ -66,14 +66,14 @@ func (h *webHandler) PatchList(w http.ResponseWriter, r *http.Request) {
 		serverErrorPage(w, "count patches", err)
 		return
 	}
-	totalPages := (total + perPage - 1) / perPage
+	totalPages := (int(total) + perPage - 1) / perPage
 	if page > totalPages && totalPages > 0 {
 		page = totalPages
 	}
 
 	var patches []db.Patch
 	err = sq.Relation("Submitter").Relation("State").Relation("Delegate").
-		Offset((page-1)*perPage).Limit(perPage).Scan(q.Ctx, &patches)
+		Offset(int64((page-1)*perPage)).Limit(int64(perPage)).Scan(q.Ctx, &patches)
 	if err != nil {
 		serverErrorPage(w, "list patches", err)
 		return
@@ -160,7 +160,7 @@ func (h *webHandler) PatchList(w http.ResponseWriter, r *http.Request) {
 		Sort:        sort,
 		Page:        page,
 		PerPage:     perPage,
-		Total:       total,
+		Total:       int(total),
 		TotalPages:  totalPages,
 		BaseQuery:   bq,
 		SeriesNames: seriesNames,

@@ -55,8 +55,8 @@ func loadSeriesDetail(ctx context.Context, q *db.Queries, base string, series []
 		if err != nil {
 			log.Errorf("count series patches: %v", err)
 		}
-		s.ReceivedTotal = count
-		s.ReceivedAll = count >= int(s.Total)
+		s.ReceivedTotal = int(count)
+		s.ReceivedAll = count >= int64(s.Total)
 
 		if s.CoverLetterID != nil {
 			var cover db.Cover
@@ -293,7 +293,7 @@ func updateRelated(
 	return tx.Commit()
 }
 
-func buildLinkHeader(page, perPage, total int) string {
+func buildLinkHeader(page int, perPage, total int64) string {
 	lastPage := (total + perPage - 1) / perPage
 	if lastPage < 1 {
 		lastPage = 1
@@ -302,7 +302,7 @@ func buildLinkHeader(page, perPage, total int) string {
 	if page > 1 {
 		link += fmt.Sprintf(", </?page=%d>; rel=\"prev\"", page-1)
 	}
-	if page < lastPage {
+	if int64(page) < lastPage {
 		link += fmt.Sprintf(", </?page=%d>; rel=\"next\"", page+1)
 	}
 	return link

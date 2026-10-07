@@ -76,7 +76,7 @@ func (p *parser) createPatchCompletedEvent() {
 	}
 
 	predCount, err := p.db.CountPredecessorPatches(p.series.ID, number)
-	if err != nil || predCount != number-1 {
+	if err != nil || predCount != int64(number-1) {
 		return
 	}
 
@@ -113,7 +113,7 @@ func (p *parser) createSeriesCompletedEvent() {
 	if err != nil {
 		return
 	}
-	if count < p.series.Total {
+	if count < int64(p.series.Total) {
 		return
 	}
 

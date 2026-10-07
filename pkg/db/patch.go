@@ -66,7 +66,7 @@ func (q *Queries) GetPatchBySeriesAndNumber(seriesID int, number int) (*Patch, e
 	return &p, err
 }
 
-func (q *Queries) CountPredecessorPatches(seriesID int, number int) (int, error) {
+func (q *Queries) CountPredecessorPatches(seriesID int, number int) (int64, error) {
 	return q.Select((*Patch)(nil)).
 		Where("series_id = ?", seriesID).
 		Where("number < ?", number).
@@ -91,7 +91,7 @@ func (q *Queries) UpdatePatchesBySeriesToState(seriesID, stateID *int) error {
 	return err
 }
 
-func (q *Queries) CountPatchesInSeries(seriesID int) (int, error) {
+func (q *Queries) CountPatchesInSeries(seriesID int) (int64, error) {
 	return q.Select((*Patch)(nil)).
 		Where("series_id = ?", seriesID).
 		Count(q.Ctx)

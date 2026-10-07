@@ -46,7 +46,7 @@ func NewRouter(cfg *config.Config, database *bun.DB, bus db.EventBus, version st
 		r.Use(slowRequestLogger(t))
 	}
 	if t := cfg.Http.SlowQuery.Duration(); t > 0 {
-		database.AddQueryHook(db.NewSlowQueryHook(t))
+		database = database.WithQueryHook(db.NewSlowQueryHook(t))
 	}
 	r.Use(db.Middleware(database, bus))
 
